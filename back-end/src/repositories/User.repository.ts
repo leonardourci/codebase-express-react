@@ -21,7 +21,6 @@ export default class UserRepository implements IUserRepository {
             age: payload.age,
             email: payload.email,
             fullName: payload.fullName,
-            profilePicUrl: payload.profilePicUrl
         }
     }
 }

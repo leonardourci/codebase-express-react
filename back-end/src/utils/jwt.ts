@@ -1,31 +1,42 @@
 import jwt from 'jsonwebtoken'
 
-import {CustomError} from './errors'
-import {EStatusCodes} from '../domain/statusCodes'
-import {IPerformJsonCallback} from "../interfaces/expressAdapter";
+import { CustomError } from './errors'
+import { EStatusCodes } from '../domain/statusCodes'
+import { IPerformJsonCallback } from '../interfaces/expressAdapter'
+import Joi from 'joi'
 
-const {JWT_SECRET} = process.env
+const { JWT_SECRET } = process.env
 
 interface IGenerateTokenPayload {
-    userId: number
+  userId: number
 }
 
-export const generateToken = (payload: IGenerateTokenPayload) => jwt.sign(payload, JWT_SECRET ?? '', {expiresIn: '1d'})
+export const generateToken = (payload: IGenerateTokenPayload) => jwt.sign(payload, JWT_SECRET ?? '', { expiresIn: '1d' })
 
 // @TODO remove the any from the response of this method
 export const verifyToken = (payload: { authorization: string }): IPerformJsonCallback<any> => {
-    if (!payload?.authorization) throw new CustomError('TOKEN_NOT_FOUND', EStatusCodes.UNAUTHORIZED)
-
-    try {
-        const token = payload.authorization.split('Bearer ')[1]
-
-        jwt.verify(token, JWT_SECRET ?? '')
-
-        return {
-            response: {},
-            status: EStatusCodes.OK
+  const { value, error } = Joi.object<{ authorization: string }>({
+    authorization: Joi.string()
+      .required()
+      .custom((value, helpers) => {
+        if (!value.startsWith('Bearer ')) {
+          return helpers.error('any.invalid')
         }
-    } catch (tokenErr) {
-        throw new CustomError('TOKEN_ERROR', EStatusCodes.UNAUTHORIZED)
+        return value
+      }, 'authorizationBearer')
+  }).validate(payload, { abortEarly: false })
+
+  if (error) throw new CustomError('TOKEN_NOT_FOUND', EStatusCodes.UNAUTHORIZED)
+  try {
+    const token = value.authorization.split('Bearer ')[1]
+
+    jwt.verify(token!, JWT_SECRET ?? '')
+
+    return {
+      response: {},
+      status: EStatusCodes.OK
     }
+  } catch (tokenErr) {
+    throw new CustomError('TOKEN_ERROR', EStatusCodes.UNAUTHORIZED)
+  }
 }

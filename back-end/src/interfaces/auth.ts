@@ -12,7 +12,6 @@ export interface ISignupPayload {
   email: string
   password: string
   age: number
-  profilePicUrl?: string
 }
 
 export interface ISignupResponse extends Omit<ISignupPayload, 'password'> {

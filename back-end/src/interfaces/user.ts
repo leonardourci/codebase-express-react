@@ -3,7 +3,6 @@ export interface IUser {
   email: string
   passwordHash: string
   age: number
-  profilePicUrl?: string
 }
 
 export interface IUserInfoByEmailResponse {
