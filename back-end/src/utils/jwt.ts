@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import Joi from 'joi'
 
 import { CustomError } from './errors'
-import { EStatusCodes } from '../domain/statusCodes'
+import { EStatusCodes } from './statusCodes'
 import { IPerformJsonCallback } from '../adapters/expressAdapter'
 
 const { JWT_SECRET } = process.env

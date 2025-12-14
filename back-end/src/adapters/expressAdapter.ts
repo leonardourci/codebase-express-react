@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { EStatusCodes } from '../domain/statusCodes'
+import { EStatusCodes } from '../utils/statusCodes'
 import { JoiValidationError } from '../utils/errors'
 
 export interface IPerformJsonCallback<T> {

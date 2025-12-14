@@ -1,5 +1,5 @@
-import { ISignupPayload, ISignupResponse } from '../interfaces/auth'
-import { IUserInfoByEmailResponse } from '../interfaces/user'
+import { ISignupPayload, ISignupResponse } from '../types/auth'
+import { IUserInfoByEmailResponse } from '../types/user'
 
 /**
  * @todo

@@ -1,10 +1,10 @@
 import bcrypt from 'bcrypt'
 
-import { generateJwtToken } from '../../utils/jwt'
-import { CustomError } from '../../utils/errors'
-import { EStatusCodes } from '../statusCodes'
-import { ILoginPayload, ILoginResponse, ISignupPayload, ISignupResponse } from '../../interfaces/auth'
-import { createUser, selectUserByEmail } from '../../repositories/user.repository'
+import { generateJwtToken } from '../utils/jwt'
+import { CustomError } from '../utils/errors'
+import { EStatusCodes } from '../utils/statusCodes'
+import { ILoginPayload, ILoginResponse, ISignupPayload, ISignupResponse } from '../types/auth'
+import { createUser, selectUserByEmail } from '../repositories/user.repository'
 
 const { HASH_SALT } = process.env
 

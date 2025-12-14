@@ -1,8 +1,8 @@
 import { JoiValidationError } from '../utils/errors'
-import { EStatusCodes } from '../domain/statusCodes'
-import { ILoginPayload, ILoginResponse, ISignupPayload } from '../interfaces/auth'
+import { EStatusCodes } from '../utils/statusCodes'
+import { ILoginPayload, ILoginResponse, ISignupPayload } from '../types/auth'
 import { validateLoginPayload, validateSignupPayload } from '../utils/validations/auth.validator'
-import { authenticateUser, registerUser } from '../domain/services/auth.service'
+import { authenticateUser, registerUser } from '../services/auth.service'
 import { IPerformJsonCallback } from '../adapters/expressAdapter'
 
 export async function loginHandler(payload: ILoginPayload): Promise<IPerformJsonCallback<ILoginResponse>> {
