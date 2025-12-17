@@ -1,7 +1,8 @@
 import { ISignupResponse } from '../../types/auth'
 
 export interface IUser {
-	id: number
+	// uuid
+	id: string
 	email: string
 	fullName: string
 	phone: string
@@ -17,7 +18,7 @@ export interface IUserInfoByEmailResponse {
 }
 
 export class User implements IUser {
-	id: number
+	id: string
 	email: string
 	fullName: string
 	phone: string
@@ -27,7 +28,7 @@ export class User implements IUser {
 	updatedAt?: Date
 
 	constructor(props: IUser) {
-		this.id = props.id
+		this.id = crypto.randomUUID()
 		this.email = props.email
 		this.fullName = props.fullName
 		this.phone = props.phone

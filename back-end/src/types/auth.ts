@@ -16,5 +16,5 @@ export interface ISignupPayload {
 }
 
 export interface ISignupResponse extends Omit<ISignupPayload, 'password'> {
-	id: number
+	id: string
 }
