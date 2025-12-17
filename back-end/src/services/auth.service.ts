@@ -4,16 +4,18 @@ import { generateJwtToken } from '../utils/jwt'
 import { CustomError } from '../utils/errors'
 import { EStatusCodes } from '../utils/statusCodes'
 import { ILoginPayload, ILoginResponse, ISignupPayload, ISignupResponse } from '../types/auth'
-import { createUser, selectUserByEmail } from '../repositories/user.repository'
+import { createUser, getUserByEmail } from '../database/repositories/user.repository'
 
 const { HASH_SALT } = process.env
 
 export async function authenticateUser(payload: ILoginPayload): Promise<ILoginResponse> {
-	const userInfo = await selectUserByEmail(payload.email)
+	const userInfo = await getUserByEmail({ email: payload.email })
+
+	if (!userInfo) throw new CustomError('Email or password is wrong', EStatusCodes.UNAUTHORIZED)
 
 	const isValidPassword = bcrypt.compareSync(payload.password, userInfo.passwordHash)
 
-	if (!isValidPassword) throw new CustomError('Username or password is wrong', EStatusCodes.UNAUTHORIZED)
+	if (!isValidPassword) throw new CustomError('Email or password is wrong', EStatusCodes.UNAUTHORIZED)
 
 	return { token: generateJwtToken({ userId: userInfo.id }) }
 }
