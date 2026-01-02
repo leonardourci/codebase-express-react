@@ -2,8 +2,6 @@ import { ISignupResponse } from '../../types/auth'
 import { IUser, IUserInfoByEmailResponse } from '../../types/user'
 import BaseModel from './Base.model'
 
-
-
 export class User extends BaseModel<IUser> implements IUser {
 	static tableName = 'users'
 

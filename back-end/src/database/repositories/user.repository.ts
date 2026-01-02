@@ -1,6 +1,7 @@
 import knex from '../knex'
 import { ISignupResponse } from '../../types/auth'
-import { ICreateUserPayload, IUserInfoByEmailResponse, User } from '../models/User.model'
+import { User } from '../models/User.model'
+import { ICreateUserPayload, IUserInfoByEmailResponse } from '../../types/user'
 
 export async function createUser(payload: ICreateUserPayload): Promise<ISignupResponse> {
 	const [row] = await knex(User.tableName)

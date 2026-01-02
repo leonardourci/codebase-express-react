@@ -1,8 +1,14 @@
-import { RequestHandler } from 'express'
+import Stripe from 'stripe'
+import { NextFunction, Request, Response } from 'express'
+
 import stripe from '../utils/stripe'
 import globalConfig from '../utils/globalConfig'
 
-export const verifyStripeWebhookSignature: RequestHandler = (req, res, next) => {
+export interface PaymentRequest extends Request {
+	paymentEvent: Stripe.Event
+}
+
+export const verifyStripeWebhookSignature = (req: Request, res: Response, next: NextFunction) => {
 	const signature = req.headers['stripe-signature']
 	if (!signature) {
 		console.log('⚠️  No Stripe signature found on request')
@@ -10,7 +16,7 @@ export const verifyStripeWebhookSignature: RequestHandler = (req, res, next) => 
 	}
 
 	try {
-		(req as any).stripeEvent = stripe
+		(req as PaymentRequest).paymentEvent = stripe
 			.webhooks
 			.constructEvent(
 				req.body,

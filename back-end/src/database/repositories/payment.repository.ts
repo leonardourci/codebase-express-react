@@ -1,5 +1,6 @@
 import knex from '../knex'
-import Payment, { IPayment } from '../models/Payment.model'
+import Payment from '../models/Payment.model'
+import { IPayment } from '../../types/payment'
 
 export const createPayment = async (payload: IPayment): Promise<IPayment> => {
 	const [row] = await knex
