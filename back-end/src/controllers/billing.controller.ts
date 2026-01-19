@@ -10,7 +10,7 @@ import { validateCreateCheckoutSessionPayload, validateCreatePortalSessionPayloa
 import { ICreateCheckoutSessionPayload, ICreateCheckoutSessionResponse, ICreatePortalSessionPayload, ICreatePortalSessionResponse } from '../types/billing'
 import { IBillingRequest } from '../middlewares/billing.middleware'
 import { getProductByExternalProductId } from '../database/repositories/product.repository'
-import { registerUserBilling } from '../services/billing.service'
+import { registerUserBilling, updateBillingOnPaymentFailed, updateBillingOnSubscriptionUpdated, updateBillingOnSubscriptionDeleted } from '../services/billing.service'
 import { EStatusCodes } from '../utils/statusCodes'
 
 /**
@@ -78,13 +78,10 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 					externalSubscriptionId: lineItems[0].subscription as string,
 					expiresAt: lineItems[0].period.end,
 
-					// still need to figure out how to get the payment intent id from the invoice object
-					externalPaymentIntentId: 'something'
+					externalPaymentIntentId: String(paidInvoice)
 				})
 				// await sendBillingConfirmationMessage({})
 			}
-
-			res.status(EStatusCodes.OK).send('Webhook processed successfully')
 			break
 		}
 
@@ -114,6 +111,8 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 				invoiceId: failedInvoice.id,
 				status: failedInvoice.status
 			})
+			const subscriptionId = failedInvoice.lines?.data?.[0]?.subscription
+			await updateBillingOnPaymentFailed(String(subscriptionId || ''))
 			break
 		}
 
@@ -139,6 +138,11 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 		case 'customer.subscription.updated': {
 			const updatedSubscription = billingEvent.data.object
 			if (updatedSubscription.cancel_at_period_end) {
+				await updateBillingOnSubscriptionUpdated({
+					externalSubscriptionId: updatedSubscription.id,
+					status: updatedSubscription.status,
+					currentPeriodEnd: new Date((updatedSubscription.cancel_at || new Date().getTime()) * 1000)
+				})
 				console.log('customer.subscription.updated cancel_at_period_end', {
 					subscriptionId: updatedSubscription.id,
 					cancelAtPeriodEnd: updatedSubscription.cancel_at_period_end
@@ -149,6 +153,7 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 					status: updatedSubscription.status
 				})
 			}
+
 			break
 		}
 
@@ -175,9 +180,11 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 				subscriptionId: deletedSubscription.id,
 				customer: deletedSubscription.customer
 			})
+			await updateBillingOnSubscriptionDeleted(deletedSubscription.id)
 			break
 		}
 	}
+	res.status(EStatusCodes.OK).send('Webhook processed successfully')
 }
 
 export async function createCheckoutSessionHandler(payload: ICreateCheckoutSessionPayload): Promise<IPerformJsonCallback<ICreateCheckoutSessionResponse>> {
