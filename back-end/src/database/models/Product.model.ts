@@ -8,6 +8,7 @@ export interface IProduct extends IBaseModel {
 	type: string
 	externalProductId: string
 	externalPriceId: string
+	active: boolean
 }
 
 export default class Product extends BaseModel<IProduct> implements IProduct {
@@ -20,6 +21,7 @@ export default class Product extends BaseModel<IProduct> implements IProduct {
 	type: string
 	externalProductId: string
 	externalPriceId: string
+	active: boolean
 
 	constructor(data: IProduct) {
 		super()
@@ -30,6 +32,7 @@ export default class Product extends BaseModel<IProduct> implements IProduct {
 		this.type = data.type
 		this.externalProductId = data.externalProductId
 		this.externalPriceId = data.externalPriceId
+		this.active = data.active
 	}
 
 	toJSON(): IProduct {
@@ -42,6 +45,7 @@ export default class Product extends BaseModel<IProduct> implements IProduct {
 			type: this.type,
 			externalProductId: this.externalProductId,
 			externalPriceId: this.externalPriceId,
+			active: this.active,
 			createdAt: this.createdAt,
 			updatedAt: this.updatedAt
 		})
@@ -57,6 +61,7 @@ export default class Product extends BaseModel<IProduct> implements IProduct {
 			type: this.type,
 			external_product_id: this.externalProductId,
 			external_price_id: this.externalPriceId,
+			active: this.active,
 			created_at: this.createdAt,
 			updated_at: this.updatedAt
 		}
