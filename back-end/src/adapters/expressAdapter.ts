@@ -7,7 +7,7 @@ export interface IPerformJsonCallback<T> {
 	response: T
 }
 
-type TPerformJsonCallback = (payload: any) => Promise<IPerformJsonCallback<any>> | IPerformJsonCallback<any>
+type TPerformJsonCallback = (input: any) => Promise<IPerformJsonCallback<any>> | IPerformJsonCallback<any>
 
 export function performJson(fn: TPerformJsonCallback) {
 	return async (req: Request, res: Response): Promise<Response<any> | void> => {

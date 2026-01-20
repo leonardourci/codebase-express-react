@@ -7,7 +7,7 @@ import { decodeJwtToken } from '../utils/jwt'
 import { getBillingByUserId } from '../database/repositories/billing.repository'
 import { getProductById } from '../database/repositories/product.repository'
 import { createCheckoutSessionSchema, createPortalSessionSchema } from '../utils/validations/billing.schemas'
-import { TCreateCheckoutSessionPayload, ICreateCheckoutSessionResponse, TCreatePortalSessionPayload, ICreatePortalSessionResponse } from '../types/billing'
+import { TCreateCheckoutSessionInput, ICreateCheckoutSessionResponse, TCreatePortalSessionInput, ICreatePortalSessionResponse } from '../types/billing'
 import { IBillingRequest } from '../middlewares/billing.middleware'
 import { getProductByExternalProductId } from '../database/repositories/product.repository'
 import { registerUserBilling, updateBillingOnPaymentFailed, updateBillingOnSubscriptionUpdated, updateBillingOnSubscriptionDeleted } from '../services/billing.service'
@@ -187,8 +187,8 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 	res.status(EStatusCodes.OK).send('Webhook processed successfully')
 }
 
-export async function createCheckoutSessionHandler(payload: TCreateCheckoutSessionPayload): Promise<IPerformJsonCallback<ICreateCheckoutSessionResponse>> {
-	const { data, error } = createCheckoutSessionSchema.safeParse(payload)
+export async function createCheckoutSessionHandler(input: TCreateCheckoutSessionInput): Promise<IPerformJsonCallback<ICreateCheckoutSessionResponse>> {
+	const { data, error } = createCheckoutSessionSchema.safeParse(input)
 
 	if (error) throw new ZodValidationError(error)
 
@@ -219,8 +219,8 @@ export async function createCheckoutSessionHandler(payload: TCreateCheckoutSessi
 	}
 }
 
-export async function createCustomerPortalSessionHandler(payload: TCreatePortalSessionPayload): Promise<IPerformJsonCallback<ICreatePortalSessionResponse>> {
-	const { data, error } = createPortalSessionSchema.safeParse(payload)
+export async function createCustomerPortalSessionHandler(input: TCreatePortalSessionInput): Promise<IPerformJsonCallback<ICreatePortalSessionResponse>> {
+	const { data, error } = createPortalSessionSchema.safeParse(input)
 
 	if (error) throw new ZodValidationError(error)
 

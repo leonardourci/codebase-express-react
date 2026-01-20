@@ -1,11 +1,10 @@
 import express from 'express'
 import cors from 'cors'
+import * as trpcExpress from '@trpc/server/adapters/express'
 
-import authRoutes from './routes/auth.routes'
-import billingRoutes from './routes/billing.routes'
 import { processBillingWebhookHandler } from './controllers/billing.controller'
 import { verifyIfUserBillingHasExpiredMiddleware, verifyStripeWebhookSignatureMiddleware } from './middlewares/billing.middleware'
-import { verifyUserTokenMiddleware } from './middlewares/jwt.middleware'
+import { appRouter, createTRPCContext } from './trpc'
 
 const app = express()
 
@@ -21,16 +20,13 @@ app.use(cors())
 // to parse incoming JSON data from requests
 app.use(express.json())
 
-// login route with returns a token which needs to be used in all the next routes below the login one
-app.use('/auth', authRoutes)
-
-// all the requests below needs a JWT 'authorization' headers key
-// example: { headers: { authorization: Bearer token123 } }
+// Mount tRPC on /trpc route
 app.use(
-  verifyUserTokenMiddleware,
-  verifyIfUserBillingHasExpiredMiddleware
+  '/trpc',
+  trpcExpress.createExpressMiddleware({
+    router: appRouter,
+    createContext: createTRPCContext,
+  })
 )
-
-app.use('/billing', billingRoutes)
 
 export default app

@@ -7,4 +7,4 @@ export enum ENodeEnvs {
 	TEST = 'test'
 }
 
-export type TGlobalEnvsPayload = z.infer<typeof globalEnvsSchema>
+export type TGlobalEnvsInput = z.infer<typeof globalEnvsSchema>

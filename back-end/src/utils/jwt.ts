@@ -4,13 +4,13 @@ import { CustomError, ZodValidationError } from './errors'
 import { EStatusCodes } from './statusCodes'
 import globalConfig from './globalConfig'
 import { IUser } from '../types/user'
-import { TValidateTokenPayload, IToken } from '../types/jwt'
+import { TValidateTokenInput, IToken } from '../types/jwt'
 import { validateTokenSchema } from './validations/jwt.schemas'
 
-export const generateJwtToken = (payload: { userId: IUser['id'] }) => jwt.sign(payload, globalConfig.jwtSecret, { expiresIn: '1d' })
+export const generateJwtToken = (input: { userId: IUser['id'] }) => jwt.sign(input, globalConfig.jwtSecret, { expiresIn: '1d' })
 
-export const verifyJwtToken = (payload: TValidateTokenPayload): void => {
-	const { data, error } = validateTokenSchema.safeParse(payload)
+export const verifyJwtToken = (input: TValidateTokenInput): void => {
+	const { data, error } = validateTokenSchema.safeParse(input)
 
 	if (error) throw new ZodValidationError(error)
 
@@ -23,7 +23,7 @@ export const verifyJwtToken = (payload: TValidateTokenPayload): void => {
 	}
 }
 
-export const decodeJwtToken = ({ token }: TValidateTokenPayload): IToken => {
+export const decodeJwtToken = ({ token }: TValidateTokenInput): IToken => {
 	const { data, error } = validateTokenSchema.safeParse({ token })
 
 	if (error) throw new ZodValidationError(error)

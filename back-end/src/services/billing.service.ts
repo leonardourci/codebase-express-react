@@ -7,7 +7,7 @@ import {
 	updateBillingById
 } from '../database/repositories/billing.repository'
 
-export interface IUpdateUserBillingPayload {
+export interface IUpdateUserBillingInput {
 	userEmail: string
 	productId: string
 	externalCustomerId: string
@@ -16,27 +16,27 @@ export interface IUpdateUserBillingPayload {
 	externalPaymentIntentId: string
 }
 
-export const registerUserBilling = async (payload: IUpdateUserBillingPayload) => {
-	const user = await getUserByEmail({ email: payload.userEmail })
+export const registerUserBilling = async (input: IUpdateUserBillingInput) => {
+	const user = await getUserByEmail({ email: input.userEmail })
 	if (!user) {
-		throw new Error(`User with email "${payload.userEmail}" not found`)
+		throw new Error(`User with email "${input.userEmail}" not found`)
 	}
 
 	const billing = await getBillingByUserId({ userId: user.id })
 	if (!billing) {
 		await createBilling({
 			userId: user.id,
-			productId: payload.productId,
-			externalPaymentIntentId: payload.externalPaymentIntentId,
-			externalSubscriptionId: payload.externalSubscriptionId,
-			externalCustomerId: payload.externalCustomerId,
+			productId: input.productId,
+			externalPaymentIntentId: input.externalPaymentIntentId,
+			externalSubscriptionId: input.externalSubscriptionId,
+			externalCustomerId: input.externalCustomerId,
 			status: 'active',
-			expiresAt: new Date(payload.expiresAt * 1000)
+			expiresAt: new Date(input.expiresAt * 1000)
 		})
 	} else {
 		await updateBillingByUserId({
 			id: billing.id as string,
-			expiresAt: new Date(payload.expiresAt * 1000)
+			expiresAt: new Date(input.expiresAt * 1000)
 		})
 	}
 }
@@ -48,14 +48,14 @@ export const updateBillingOnPaymentFailed = async (externalSubscriptionId: strin
 	await updateBillingById({ id: billing.id as string, status: 'past_due' })
 }
 
-export const updateBillingOnSubscriptionUpdated = async (payload: { externalSubscriptionId: string; status?: string; currentPeriodEnd: Date }) => {
-	if (!payload.externalSubscriptionId) return
-	const billing = await getBillingByExternalSubscriptionId({ externalSubscriptionId: payload.externalSubscriptionId })
+export const updateBillingOnSubscriptionUpdated = async (input: { externalSubscriptionId: string; status?: string; currentPeriodEnd: Date }) => {
+	if (!input.externalSubscriptionId) return
+	const billing = await getBillingByExternalSubscriptionId({ externalSubscriptionId: input.externalSubscriptionId })
 	if (!billing) return
 	await updateBillingById({
 		id: billing.id as string,
-		status: payload.status,
-		expiresAt: payload.currentPeriodEnd
+		status: input.status,
+		expiresAt: input.currentPeriodEnd
 	})
 }
 

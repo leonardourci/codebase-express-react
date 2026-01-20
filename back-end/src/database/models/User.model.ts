@@ -1,5 +1,5 @@
 import { ISignupResponse } from '../../types/auth'
-import { ICreateUserPayload, IUser, IUserInfoByEmailResponse } from '../../types/user'
+import { ICreateUserInput, IUser, IUserInfoByEmailResponse } from '../../types/user'
 import BaseModel from './Base.model'
 
 export class User extends BaseModel<IUser> implements IUser {
@@ -11,7 +11,7 @@ export class User extends BaseModel<IUser> implements IUser {
 	age: number
 	passwordHash: string
 
-	constructor(props: ICreateUserPayload) {
+	constructor(props: ICreateUserInput) {
 		super()
 		this.email = props.email
 		this.fullName = props.fullName

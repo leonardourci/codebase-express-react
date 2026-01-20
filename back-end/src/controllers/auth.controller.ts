@@ -1,12 +1,12 @@
 import { ZodValidationError } from '../utils/errors'
 import { EStatusCodes } from '../utils/statusCodes'
-import { TLoginPayload, ILoginResponse, TSignupPayload } from '../types/auth'
+import { TLoginInput, ILoginResponse, TSignupInput } from '../types/auth'
 import { loginSchema, signupSchema } from '../utils/validations/auth.schemas'
 import { authenticateUser, registerUser } from '../services/auth.service'
 import { IPerformJsonCallback } from '../adapters/expressAdapter'
 
-export async function loginHandler(payload: TLoginPayload): Promise<IPerformJsonCallback<ILoginResponse>> {
-	const { data, error } = loginSchema.safeParse(payload)
+export async function loginHandler(input: TLoginInput): Promise<IPerformJsonCallback<ILoginResponse>> {
+	const { data, error } = loginSchema.safeParse(input)
 
 	if (error) throw new ZodValidationError(error)
 
@@ -16,8 +16,8 @@ export async function loginHandler(payload: TLoginPayload): Promise<IPerformJson
 	}
 }
 
-export async function signupHandler(payload: TSignupPayload): Promise<IPerformJsonCallback<any>> {
-	const { data, error } = signupSchema.safeParse(payload)
+export async function signupHandler(input: TSignupInput): Promise<IPerformJsonCallback<any>> {
+	const { data, error } = signupSchema.safeParse(input)
 
 	if (error) throw new ZodValidationError(error)
 

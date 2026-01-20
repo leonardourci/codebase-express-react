@@ -5,4 +5,4 @@ export interface IToken {
     userId: string
 }
 
-export type TValidateTokenPayload = z.infer<typeof validateTokenSchema>
+export type TValidateTokenInput = z.infer<typeof validateTokenSchema>

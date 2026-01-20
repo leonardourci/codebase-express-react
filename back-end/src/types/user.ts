@@ -8,7 +8,7 @@ export interface IUser extends IBaseModel {
   passwordHash?: string
 }
 
-export interface ICreateUserPayload {
+export interface ICreateUserInput {
   fullName: string
   email: string
   passwordHash: string

@@ -31,6 +31,6 @@ export interface ICreatePortalSessionResponse {
   url: string
 }
 
-export type TCreateCheckoutSessionPayload = z.infer<typeof createCheckoutSessionSchema>
+export type TCreateCheckoutSessionInput = z.infer<typeof createCheckoutSessionSchema>
 
-export type TCreatePortalSessionPayload = z.infer<typeof createPortalSessionSchema>
+export type TCreatePortalSessionInput = z.infer<typeof createPortalSessionSchema>

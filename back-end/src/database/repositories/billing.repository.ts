@@ -3,9 +3,9 @@ import Billing from '../models/Billing.model'
 import { ICreateBilling, IBilling } from '../../types/billing'
 import { IUser } from '../../types/user'
 
-export const createBilling = async (payload: ICreateBilling): Promise<IBilling> => {
+export const createBilling = async (input: ICreateBilling): Promise<IBilling> => {
 	const [row] = await knex
-		.insert(new Billing(payload).toDatabaseFormat())
+		.insert(new Billing(input).toDatabaseFormat())
 		.into(Billing.tableName)
 		.returning([
 			'id',
@@ -31,14 +31,14 @@ export const getBillingByUserId = async ({ userId }: { userId: IUser['id'] }): P
 	return new Billing(row).toJSON()
 }
 
-export const updateBillingByUserId = async (payload: { id: string; expiresAt: Date }): Promise<IBilling> => {
+export const updateBillingByUserId = async (input: { id: string; expiresAt: Date }): Promise<IBilling> => {
 	const [row] = await knex(Billing.tableName)
 		.update({
-			expires_at: payload.expiresAt,
+			expires_at: input.expiresAt,
 			status: 'active',
 			updated_at: new Date()
 		})
-		.where({ id: payload.id })
+		.where({ id: input.id })
 		.returning([
 			'id',
 			'user_id',
@@ -63,14 +63,14 @@ export const getBillingByExternalSubscriptionId = async ({ externalSubscriptionI
 	return new Billing(row).toJSON()
 }
 
-export const updateBillingById = async (payload: { id: string; status?: string; expiresAt?: Date }): Promise<IBilling> => {
+export const updateBillingById = async (input: { id: string; status?: string; expiresAt?: Date }): Promise<IBilling> => {
 	const updates: Record<string, any> = { updated_at: new Date() }
-	if (payload.status) updates.status = payload.status
-	if (payload.expiresAt) updates.expires_at = payload.expiresAt
+	if (input.status) updates.status = input.status
+	if (input.expiresAt) updates.expires_at = input.expiresAt
 
 	const [row] = await knex(Billing.tableName)
 		.update(updates)
-		.where({ id: payload.id })
+		.where({ id: input.id })
 		.returning([
 			'id',
 			'user_id',

@@ -1,16 +1,16 @@
 import knex from '../knex'
 import { ISignupResponse } from '../../types/auth'
 import { User } from '../models/User.model'
-import { ICreateUserPayload, IUserInfoByEmailResponse } from '../../types/user'
+import { ICreateUserInput, IUserInfoByEmailResponse } from '../../types/user'
 
-export async function createUser(payload: ICreateUserPayload): Promise<ISignupResponse> {
+export async function createUser(input: ICreateUserInput): Promise<ISignupResponse> {
 	const [row] = await knex(User.tableName)
 		.insert({
-			email: payload.email,
-			full_name: payload.fullName,
-			age: payload.age,
-			phone: payload.phone,
-			password_hash: payload.passwordHash,
+			email: input.email,
+			full_name: input.fullName,
+			age: input.age,
+			phone: input.phone,
+			password_hash: input.passwordHash,
 			created_at: new Date(),
 			updated_at: new Date()
 		})
@@ -25,8 +25,8 @@ export async function createUser(payload: ICreateUserPayload): Promise<ISignupRe
 	}).toSignupResponse()
 }
 
-export const getUserByEmail = async (payload: Pick<User, 'email'>): Promise<IUserInfoByEmailResponse | null> => {
-	const [row] = await knex(User.tableName).where({ email: payload.email }).select()
+export const getUserByEmail = async (input: Pick<User, 'email'>): Promise<IUserInfoByEmailResponse | null> => {
+	const [row] = await knex(User.tableName).where({ email: input.email }).select()
 
 	if (!row) return null
 
@@ -35,8 +35,8 @@ export const getUserByEmail = async (payload: Pick<User, 'email'>): Promise<IUse
 	return user
 }
 
-export const getUserById = async (payload: { id: string }): Promise<User | null> => {
-	const [row] = await knex(User.tableName).where({ id: payload.id }).select()
+export const getUserById = async (input: { id: string }): Promise<User | null> => {
+	const [row] = await knex(User.tableName).where({ id: input.id }).select()
 
 	if (!row) return null
 
