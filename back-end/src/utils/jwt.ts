@@ -1,43 +1,21 @@
 import jwt from 'jsonwebtoken'
-import Joi from 'joi'
 
-import { CustomError } from './errors'
+import { CustomError, ZodValidationError } from './errors'
 import { EStatusCodes } from './statusCodes'
 import globalConfig from './globalConfig'
 import { IUser } from '../types/user'
-
-export interface IValidateTokenPayload {
-	token: string
-}
-
-export interface IToken {
-	userId: IUser['id']
-}
-
-const validateToken = (payload: IValidateTokenPayload) => {
-	return Joi.object<IValidateTokenPayload>({
-		token: Joi.string()
-			.required()
-			.not()
-			.empty()
-			.custom((value, helpers) => {
-				if (!value.startsWith('Bearer ')) {
-					return helpers.error('any.invalid')
-				}
-				return value
-			}, 'authorizationBearer')
-	}).validate(payload, { abortEarly: false })
-}
+import { TValidateTokenPayload, IToken } from '../types/jwt'
+import { validateTokenSchema } from './validations/jwt.schemas'
 
 export const generateJwtToken = (payload: { userId: IUser['id'] }) => jwt.sign(payload, globalConfig.jwtSecret, { expiresIn: '1d' })
 
-export const verifyJwtToken = (payload: IValidateTokenPayload): void => {
-	const { value, error } = validateToken(payload)
+export const verifyJwtToken = (payload: TValidateTokenPayload): void => {
+	const { data, error } = validateTokenSchema.safeParse(payload)
 
-	if (error) throw new CustomError('TOKEN_NOT_FOUND', EStatusCodes.UNAUTHORIZED)
+	if (error) throw new ZodValidationError(error)
 
 	try {
-		const token = value.token.split('Bearer ')[1]
+		const token = data!.token.split('Bearer ')[1]
 
 		jwt.verify(token!, globalConfig.jwtSecret)
 	} catch (err) {
@@ -45,7 +23,10 @@ export const verifyJwtToken = (payload: IValidateTokenPayload): void => {
 	}
 }
 
-export const decodeJwtToken = ({ token }: IValidateTokenPayload): IToken => {
-	validateToken({ token })
-	return jwt.decode(token) as IToken
+export const decodeJwtToken = ({ token }: TValidateTokenPayload): IToken => {
+	const { data, error } = validateTokenSchema.safeParse({ token })
+
+	if (error) throw new ZodValidationError(error)
+
+	return jwt.decode(data.token) as IToken
 }

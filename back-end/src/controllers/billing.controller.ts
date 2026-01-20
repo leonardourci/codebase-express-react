@@ -2,12 +2,12 @@ import { Response } from 'express'
 
 import { IPerformJsonCallback } from '../adapters/expressAdapter'
 import stripe from '../utils/stripe'
-import { JoiValidationError, CustomError } from '../utils/errors'
+import { ZodValidationError, CustomError } from '../utils/errors'
 import { decodeJwtToken } from '../utils/jwt'
 import { getBillingByUserId } from '../database/repositories/billing.repository'
 import { getProductById } from '../database/repositories/product.repository'
-import { validateCreateCheckoutSessionPayload, validateCreatePortalSessionPayload } from '../utils/validations/billing.validator'
-import { ICreateCheckoutSessionPayload, ICreateCheckoutSessionResponse, ICreatePortalSessionPayload, ICreatePortalSessionResponse } from '../types/billing'
+import { createCheckoutSessionSchema, createPortalSessionSchema } from '../utils/validations/billing.schemas'
+import { ICreateCheckoutSessionPayload, ICreateCheckoutSessionResponse, TCreatePortalSessionPayload, TCreatePortalSessionResponse } from '../types/billing'
 import { IBillingRequest } from '../middlewares/billing.middleware'
 import { getProductByExternalProductId } from '../database/repositories/product.repository'
 import { registerUserBilling, updateBillingOnPaymentFailed, updateBillingOnSubscriptionUpdated, updateBillingOnSubscriptionDeleted } from '../services/billing.service'
@@ -188,18 +188,20 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 }
 
 export async function createCheckoutSessionHandler(payload: ICreateCheckoutSessionPayload): Promise<IPerformJsonCallback<ICreateCheckoutSessionResponse>> {
-	const { value, error } = validateCreateCheckoutSessionPayload(payload)
-	if (error) throw new JoiValidationError(error)
+	const { data, error } = createCheckoutSessionSchema.safeParse(payload)
+
+	if (error) throw new ZodValidationError(error)
 
 	try {
-		const product = await getProductById({ id: value.productId })
+		const product = await getProductById({ id: data.productId })
 		if (!product) throw new CustomError('Product not found', EStatusCodes.NOT_FOUND)
 
 		const session = await stripe.checkout.sessions.create({
 			mode: 'subscription',
 			line_items: [{ price: product.externalPriceId, quantity: 1 }],
-			success_url: value.successUrl,
-			cancel_url: value.cancelUrl,
+			success_url: data.successUrl,
+			cancel_url: data.cancelUrl,
+			metadata: { productId: product.id },
 			allow_promotion_codes: true
 		})
 
@@ -217,11 +219,12 @@ export async function createCheckoutSessionHandler(payload: ICreateCheckoutSessi
 	}
 }
 
-export async function createCustomerPortalSessionHandler(payload: ICreatePortalSessionPayload): Promise<IPerformJsonCallback<ICreatePortalSessionResponse>> {
-	const { value, error } = validateCreatePortalSessionPayload(payload)
-	if (error) throw new JoiValidationError(error)
+export async function createCustomerPortalSessionHandler(payload: TCreatePortalSessionPayload): Promise<IPerformJsonCallback<TCreatePortalSessionResponse>> {
+	const { data, error } = createPortalSessionSchema.safeParse(payload)
 
-	const { userId } = decodeJwtToken({ token: value.token })
+	if (error) throw new ZodValidationError(error)
+
+	const { userId } = decodeJwtToken({ token: data.token })
 	const billing = await getBillingByUserId({ userId })
 	if (!billing) throw new CustomError('User billing not found', EStatusCodes.NOT_FOUND)
 	if (!billing.externalCustomerId) throw new CustomError('Stripe customer not found', EStatusCodes.NOT_FOUND)
@@ -229,7 +232,7 @@ export async function createCustomerPortalSessionHandler(payload: ICreatePortalS
 	try {
 		const portal = await stripe.billingPortal.sessions.create({
 			customer: billing.externalCustomerId,
-			return_url: value.returnUrl
+			return_url: data.returnUrl
 		})
 
 		return {

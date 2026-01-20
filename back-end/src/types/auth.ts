@@ -1,20 +1,14 @@
-export interface ILoginPayload {
-	email: string
-	password: string
-}
+import { z } from 'zod'
+import { loginSchema, signupSchema } from '../utils/validations/auth.schemas'
+
+export type TLoginPayload = z.infer<typeof loginSchema>
 
 export interface ILoginResponse {
 	token: string
 }
 
-export interface ISignupPayload {
-	fullName: string
-	email: string
-	password: string
-	age: number
-	phone: string
-}
+export type TSignupPayload = z.infer<typeof signupSchema>
 
-export interface ISignupResponse extends Omit<ISignupPayload, 'password'> {
+export interface ISignupResponse extends Omit<TSignupPayload, 'password'> {
 	id: string
 }

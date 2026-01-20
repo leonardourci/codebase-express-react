@@ -1,28 +1,28 @@
-import { JoiValidationError } from '../utils/errors'
+import { ZodValidationError } from '../utils/errors'
 import { EStatusCodes } from '../utils/statusCodes'
-import { ILoginPayload, ILoginResponse, ISignupPayload } from '../types/auth'
-import { validateLoginPayload, validateSignupPayload } from '../utils/validations/auth.validator'
+import { TLoginPayload, ILoginResponse, TSignupPayload } from '../types/auth'
+import { loginSchema, signupSchema } from '../utils/validations/auth.schemas'
 import { authenticateUser, registerUser } from '../services/auth.service'
 import { IPerformJsonCallback } from '../adapters/expressAdapter'
 
-export async function loginHandler(payload: ILoginPayload): Promise<IPerformJsonCallback<ILoginResponse>> {
-	const { value, error } = validateLoginPayload(payload)
+export async function loginHandler(payload: TLoginPayload): Promise<IPerformJsonCallback<ILoginResponse>> {
+	const { data, error } = loginSchema.safeParse(payload)
 
-	if (error) throw new JoiValidationError(error)
+	if (error) throw new ZodValidationError(error)
 
 	return {
-		response: await authenticateUser(value),
+		response: await authenticateUser(data),
 		status: EStatusCodes.OK
 	}
 }
 
-export async function signupHandler(payload: ISignupPayload): Promise<IPerformJsonCallback<any>> {
-	const { value, error } = validateSignupPayload(payload)
+export async function signupHandler(payload: TSignupPayload): Promise<IPerformJsonCallback<any>> {
+	const { data, error } = signupSchema.safeParse(payload)
 
-	if (error) throw new JoiValidationError(error)
+	if (error) throw new ZodValidationError(error)
 
 	return {
-		response: await registerUser(value),
+		response: await registerUser(data),
 		status: EStatusCodes.OK
 	}
 }

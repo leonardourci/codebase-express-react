@@ -1,17 +1,17 @@
-import { JoiValidationError } from './errors'
-import { validateGlobalEnvs } from './validations/envs.validator'
+import { ZodValidationError } from './errors'
+import { globalEnvsSchema } from './validations/envs.schemas'
 
-const { value, error } = validateGlobalEnvs(process.env)
+const { data, error } = globalEnvsSchema.safeParse(process.env)
 
 if (error) {
-	throw new JoiValidationError(error)
+	throw new ZodValidationError(error)
 }
 
 export default {
-	nodeEnv: value.NODE_ENV,
-	restPort: value.REST_PORT,
-	databaseConnectionString: value.DATABASE_CONNECTION_STRING,
-	hashSalt: value.HASH_SALT,
-	jwtSecret: value.JWT_SECRET,
-	stripeSecretKey: value.STRIPE_SECRET_KEY
+	nodeEnv: data.NODE_ENV,
+	restPort: data.REST_PORT,
+	databaseConnectionString: data.DATABASE_CONNECTION_STRING,
+	hashSalt: data.HASH_SALT,
+	jwtSecret: data.JWT_SECRET,
+	stripeSecretKey: data.STRIPE_SECRET_KEY
 } as const

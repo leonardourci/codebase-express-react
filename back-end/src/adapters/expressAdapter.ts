@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { EStatusCodes } from '../utils/statusCodes'
-import { JoiValidationError } from '../utils/errors'
+import { ZodValidationError } from '../utils/errors'
 
 export interface IPerformJsonCallback<T> {
 	status: EStatusCodes
@@ -22,7 +22,7 @@ export function performJson(fn: TPerformJsonCallback) {
 			 * Example: { errors: [ error1, error2 ] }
 			 */
 
-			if (err instanceof JoiValidationError) {
+			if (err instanceof ZodValidationError) {
 				return res.status(err.statusCode).json({ errors: err.messages })
 			}
 

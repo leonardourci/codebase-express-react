@@ -1,21 +1,21 @@
-import { ValidationError } from 'joi'
+import { ZodError } from 'zod'
 
 import { EStatusCodes } from './statusCodes'
 
 export class CustomError extends Error {
-	statusCode: number
+	statusCode: EStatusCodes
 
-	constructor(message: string, statusCode: number) {
+	constructor(message: string, statusCode: EStatusCodes) {
 		super(message)
 		this.statusCode = statusCode
 	}
 }
 
-export class JoiValidationError extends CustomError {
+export class ZodValidationError extends CustomError {
 	public messages: Array<string>
 
-	constructor(error: ValidationError) {
-		super(error.message, EStatusCodes.UNPROCESSABLE)
-		this.messages = error.details.map((detail) => detail.message)
+	constructor(error: ZodError) {
+		super('Validation failed', EStatusCodes.UNPROCESSABLE)
+		this.messages = error.issues.map((issue) => issue.message)
 	}
 }

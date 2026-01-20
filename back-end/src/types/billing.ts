@@ -1,3 +1,5 @@
+import { z } from 'zod'
+import { createCheckoutSessionSchema, createPortalSessionSchema } from '../utils/validations/billing.schemas'
 import { IBaseModel } from "../database/models/Base.model"
 
 export interface IBilling extends IBaseModel {
@@ -32,11 +34,7 @@ export interface ICreateCheckoutSessionResponse {
   url: string
 }
 
-export interface ICreatePortalSessionPayload {
-  returnUrl: string
-  token: string
-}
 
-export interface ICreatePortalSessionResponse {
-  url: string
-}
+export type TCreateCheckoutSessionPayload = z.infer<typeof createCheckoutSessionSchema>
+
+export type TCreatePortalSessionPayload = z.infer<typeof createPortalSessionSchema>
