@@ -1,13 +1,5 @@
 import { Response } from 'express'
 
-import { IPerformJsonCallback } from '../adapters/expressAdapter'
-import stripe from '../utils/stripe'
-import { ZodValidationError, CustomError } from '../utils/errors'
-import { decodeJwtToken } from '../utils/jwt'
-import { getBillingByUserId } from '../database/repositories/billing.repository'
-import { getProductById } from '../database/repositories/product.repository'
-import { createCheckoutSessionSchema, createPortalSessionSchema } from '../utils/validations/billing.schemas'
-import { TCreateCheckoutSessionInput, ICreateCheckoutSessionResponse, TCreatePortalSessionInput, ICreatePortalSessionResponse } from '../types/billing'
 import { IBillingRequest } from '../middlewares/billing.middleware'
 import { getProductByExternalProductId } from '../database/repositories/product.repository'
 import { registerUserBilling, updateBillingOnPaymentFailed, updateBillingOnSubscriptionUpdated, updateBillingOnSubscriptionDeleted } from '../services/billing.service'
@@ -185,61 +177,4 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 		}
 	}
 	res.status(EStatusCodes.OK).send('Webhook processed successfully')
-}
-
-export async function createCheckoutSessionHandler(input: TCreateCheckoutSessionInput): Promise<IPerformJsonCallback<ICreateCheckoutSessionResponse>> {
-	const { data, error } = createCheckoutSessionSchema.safeParse(input)
-
-	if (error) throw new ZodValidationError(error)
-
-	try {
-		const product = await getProductById({ id: data.productId })
-		if (!product) throw new CustomError('Product not found', EStatusCodes.NOT_FOUND)
-
-		const session = await stripe.checkout.sessions.create({
-			mode: 'subscription',
-			line_items: [{ price: product.externalPriceId, quantity: 1 }],
-			success_url: data.successUrl,
-			cancel_url: data.cancelUrl,
-			metadata: { productId: product.id },
-			allow_promotion_codes: true
-		})
-
-		if (!session.url) {
-			throw new CustomError('Checkout URL not available', EStatusCodes.INTERNAL)
-		}
-
-		return {
-			response: { id: session.id, url: session.url },
-			status: EStatusCodes.OK
-		}
-
-	} catch (err: any) {
-		throw new CustomError(err.message, EStatusCodes.INTERNAL)
-	}
-}
-
-export async function createCustomerPortalSessionHandler(input: TCreatePortalSessionInput): Promise<IPerformJsonCallback<ICreatePortalSessionResponse>> {
-	const { data, error } = createPortalSessionSchema.safeParse(input)
-
-	if (error) throw new ZodValidationError(error)
-
-	const { userId } = decodeJwtToken({ token: data.token })
-	const billing = await getBillingByUserId({ userId })
-	if (!billing) throw new CustomError('User billing not found', EStatusCodes.NOT_FOUND)
-	if (!billing.externalCustomerId) throw new CustomError('Stripe customer not found', EStatusCodes.NOT_FOUND)
-
-	try {
-		const portal = await stripe.billingPortal.sessions.create({
-			customer: billing.externalCustomerId,
-			return_url: data.returnUrl
-		})
-
-		return {
-			response: { url: portal.url },
-			status: EStatusCodes.OK
-		}
-	} catch (err: any) {
-		throw new CustomError(err.message, EStatusCodes.INTERNAL)
-	}
 }

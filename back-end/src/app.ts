@@ -3,7 +3,7 @@ import cors from 'cors'
 import * as trpcExpress from '@trpc/server/adapters/express'
 
 import { processBillingWebhookHandler } from './controllers/billing.controller'
-import { verifyIfUserBillingHasExpiredMiddleware, verifyStripeWebhookSignatureMiddleware } from './middlewares/billing.middleware'
+import { verifyStripeWebhookSignatureMiddleware } from './middlewares/billing.middleware'
 import { appRouter, createTRPCContext } from './trpc'
 
 const app = express()
