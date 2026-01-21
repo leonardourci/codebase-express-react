@@ -10,24 +10,30 @@ export class User extends BaseModel<IUser> implements IUser {
 	phone: string
 	age: number
 	passwordHash: string
+	refreshToken?: string
 
-	constructor(props: ICreateUserInput) {
+	constructor(props: ICreateUserInput & { refreshToken?: string }) {
 		super()
 		this.email = props.email
 		this.fullName = props.fullName
 		this.phone = props.phone
 		this.age = props.age
 		this.passwordHash = props.passwordHash
+		this.refreshToken = props.refreshToken
 	}
 
-	toJSON() {
-		return new User({
+	toJSON(): IUser {
+		return {
+			id: this.id,
 			email: this.email,
 			fullName: this.fullName,
 			phone: this.phone,
 			age: this.age,
 			passwordHash: this.passwordHash,
-		})
+			refreshToken: this.refreshToken,
+			createdAt: this.createdAt,
+			updatedAt: this.updatedAt
+		}
 	}
 
 	toDatabaseFormat() {
@@ -38,18 +44,20 @@ export class User extends BaseModel<IUser> implements IUser {
 			phone: this.phone,
 			age: this.age,
 			password_hash: this.passwordHash,
+			refresh_token: this.refreshToken,
 			created_at: this.createdAt,
 			updated_at: this.updatedAt
 		}
 	}
 
-	toUserWithoutPassword(): Omit<IUser, 'password'> {
+	toUserWithoutPassword(): Omit<IUser, 'passwordHash'> {
 		return {
 			id: this.id,
 			email: this.email,
 			fullName: this.fullName,
 			phone: this.phone,
 			age: this.age,
+			refreshToken: this.refreshToken,
 			createdAt: this.createdAt,
 			updatedAt: this.updatedAt
 		}

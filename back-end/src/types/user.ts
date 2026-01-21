@@ -6,6 +6,7 @@ export interface IUser extends IBaseModel {
   phone: string
   age: number
   passwordHash?: string
+  refreshToken?: string
 }
 
 export interface ICreateUserInput {

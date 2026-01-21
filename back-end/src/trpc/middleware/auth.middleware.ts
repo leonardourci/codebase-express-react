@@ -6,7 +6,6 @@ import { getBillingByUserId } from '../../database/repositories/billing.reposito
 
 /**
  * tRPC middleware that verifies JWT token and adds user to context
- * Reuses existing JWT verification logic from Express middleware
  */
 export const authMiddleware = middleware(async ({ ctx, next }) => {
     const token = ctx.req.headers['authorization']
@@ -32,7 +31,6 @@ export const authMiddleware = middleware(async ({ ctx, next }) => {
             })
         }
 
-        // Add user to context
         return next({
             ctx: {
                 ...ctx,
