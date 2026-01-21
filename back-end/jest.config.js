@@ -18,6 +18,8 @@ module.exports = {
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov', 'html'],
     setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.ts'],
+    globalSetup: '<rootDir>/tests/setup/global-setup.ts',
+    globalTeardown: '<rootDir>/tests/setup/global-teardown.ts',
     testTimeout: 30000,
     maxWorkers: 1, // Disable parallel execution for database tests
     forceExit: true,
