@@ -23,10 +23,12 @@ export const verifyJwtToken = (input: TValidateTokenInput): void => {
 	}
 }
 
-export const decodeJwtToken = ({ token }: TValidateTokenInput): IToken => {
-	const { data, error } = validateTokenSchema.safeParse({ token })
+export const decodeJwtToken = (input: TValidateTokenInput): IToken => {
+	const { data, error } = validateTokenSchema.safeParse({ token: input.token })
 
 	if (error) throw new ZodValidationError(error)
 
-	return jwt.decode(data.token) as IToken
+	const token = data.token.split('Bearer ')[1] as string
+
+	return jwt.decode(token) as IToken
 }
