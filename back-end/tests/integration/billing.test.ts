@@ -5,7 +5,8 @@ import type { TSignupInput } from '../../src/types/auth'
 import type { TCreateCheckoutSessionInput, TCreatePortalSessionInput } from '../../src/types/billing'
 import { createBilling, getBillingByUserId } from '../../src/database/repositories/billing.repository'
 import { createUser } from '../../src/database/repositories/user.repository'
-import Product from '../../src/database/models/Product.model'
+import { IProduct, IProductDbRow } from '../../src/types/product'
+import { keysToSnakeCase, keysToCamelCase } from '../../src/utils/caseConversion'
 import { mockStripe, setupStripeMocks, resetStripeMocks } from '../mocks/stripe.mock'
 
 jest.mock('../../src/utils/stripe', () => require('../mocks/stripe.mock').mockStripe)
@@ -55,32 +56,24 @@ describe('Billing Integration Tests', () => {
         authenticatedClient = createAuthenticatedTestClient(baseUrl, validToken)
 
         const db = getTestDb()
-        const [productRow] = await db(Product.tableName)
-            .insert({
-                name: 'Test Product',
-                description: 'A test product for billing tests',
-                price_in_cents: 2999,
-                currency: 'USD',
-                type: 'subscription',
-                external_product_id: 'prod_test123',
-                external_price_id: 'price_test123',
-                active: true
-            })
+
+        const productData: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'> = {
+            name: 'Test Product',
+            description: 'A test product for billing tests',
+            priceInCents: 2999,
+            currency: 'USD',
+            type: 'subscription',
+            externalProductId: 'prod_test123',
+            externalPriceId: 'price_test123',
+            active: true
+        }
+
+        const dbData = keysToSnakeCase<typeof productData, Partial<IProductDbRow>>(productData)
+        const [insertedRow] = await db('products')
+            .insert(dbData)
             .returning('*')
 
-        testProduct = new Product({
-            id: productRow.id,
-            name: productRow.name,
-            description: productRow.description,
-            priceInCents: productRow.price_in_cents,
-            currency: productRow.currency,
-            type: productRow.type,
-            externalProductId: productRow.external_product_id,
-            externalPriceId: productRow.external_price_id,
-            active: productRow.active,
-            createdAt: productRow.created_at,
-            updatedAt: productRow.updated_at
-        }).toJSON()
+        testProduct = keysToCamelCase<IProductDbRow, IProduct>(insertedRow)
     })
 
     afterEach(async () => {

@@ -34,8 +34,8 @@ export async function authenticateUser(input: TLoginInput): Promise<ILoginRespon
 	}
 }
 
-export async function registerUser(input: TSignupInput): Promise<ISignupResponse> {
-	const passwordHash = bcrypt.hashSync(input.password, Number(HASH_SALT) ?? '')
+export async function registerUser({ password, ...input }: TSignupInput): Promise<ISignupResponse> {
+	const passwordHash = bcrypt.hashSync(password, Number(HASH_SALT) ?? '')
 
 	return await createUser({ ...input, passwordHash })
 }

@@ -12,6 +12,6 @@ export const productRouter = router({
 
     getAll: procedure
         .query(async () => {
-            const products = await getAllProducts()
+            return await getAllProducts()
         })
 })

@@ -1,8 +1,11 @@
 import knex from '../knex'
-import Product, { IProduct } from '../models/Product.model'
+import { IProduct, IProductDbRow } from '../../types/product'
+import { keysToCamelCase } from '../../utils/caseConversion'
+
+const PRODUCTS_TABLE = 'products'
 
 export const getProductById = async ({ id }: { id: string }): Promise<IProduct | null> => {
-    const [row] = await knex(Product.tableName)
+    const [row] = await knex(PRODUCTS_TABLE)
         .where({ id })
         .select()
 
@@ -10,23 +13,11 @@ export const getProductById = async ({ id }: { id: string }): Promise<IProduct |
         return null
     }
 
-    return new Product({
-        id: row.id,
-        name: row.name,
-        currency: row.currency,
-        description: row.description,
-        priceInCents: row.price_in_cents,
-        type: row.type,
-        externalProductId: row.external_product_id,
-        externalPriceId: row.external_price_id || '',
-        active: row.active,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-    }).toJSON()
+    return keysToCamelCase<IProductDbRow, IProduct>(row)
 }
 
 export const getProductByExternalProductId = async ({ id }: { id: string }): Promise<IProduct | null> => {
-    const [row] = await knex(Product.tableName)
+    const [row] = await knex(PRODUCTS_TABLE)
         .where({ external_product_id: id })
         .select()
 
@@ -34,37 +25,13 @@ export const getProductByExternalProductId = async ({ id }: { id: string }): Pro
         return null
     }
 
-    return new Product({
-        id: row.id,
-        name: row.name,
-        currency: row.currency,
-        description: row.description,
-        priceInCents: row.price_in_cents,
-        type: row.type,
-        externalProductId: row.external_product_id,
-        externalPriceId: row.external_price_id || '',
-        active: row.active,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-    }).toJSON()
+    return keysToCamelCase<IProductDbRow, IProduct>(row)
 }
 
 export const getAllProducts = async (): Promise<IProduct[]> => {
-    const rows = await knex(Product.tableName)
+    const rows = await knex(PRODUCTS_TABLE)
         .where({ active: true })
         .select()
 
-    return rows.map(row => new Product({
-        id: row.id,
-        name: row.name,
-        currency: row.currency,
-        description: row.description,
-        priceInCents: row.price_in_cents,
-        type: row.type,
-        externalProductId: row.external_product_id,
-        externalPriceId: row.external_price_id || '',
-        active: row.active,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-    }).toJSON())
+    return rows.map(row => keysToCamelCase<IProductDbRow, IProduct>(row))
 }

@@ -1,4 +1,4 @@
-import { IBaseModel } from "../database/models/Base.model"
+import { IBaseModel } from "./base"
 
 export interface IUser extends IBaseModel {
   email: string
@@ -15,6 +15,18 @@ export interface ICreateUserInput {
   passwordHash: string
   age: number
   phone: string
+}
+
+export interface IUserDbRow {
+  id?: string
+  email?: string
+  full_name?: string
+  phone?: string
+  age?: number
+  password_hash?: string
+  refresh_token?: string
+  created_at?: Date
+  updated_at?: Date | null
 }
 
 export interface IUserInfoByEmailResponse {
