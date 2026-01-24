@@ -2,6 +2,7 @@ import type { ComponentProps } from "react"
 
 import { cn } from "@/lib/utils"
 
+/* eslint-disable-next-line */
 export interface InputProps extends ComponentProps<"input"> { }
 
 export function Input({ className, type, ref, ...props }: InputProps) {

@@ -1,34 +1,63 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { LandingPage } from './pages/LandingPage'
+import { LoginPage } from './pages/LoginPage'
+import { SignupPage } from './pages/SignupPage'
+import { DashboardPage } from './pages/DashboardPage'
+import { ProtectedRoute } from './components/routes/ProtectedRoute'
+import { PublicRoute } from './components/routes/PublicRoute'
+import { LoadingSpinner } from './components/ui/loading-spinner'
+import { useAuth } from './hooks/useAuth'
 
 function App() {
+    const { isAuthenticated, isLoading } = useAuth()
+
+    if (isLoading) {
+        return <LoadingSpinner size="lg" text="Loading application..." fullScreen />
+    }
+
     return (
-        <div className="min-h-screen bg-background p-8">
-            <div className="max-w-md mx-auto space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Frontend Foundation</CardTitle>
-                        <CardDescription>
-                            React 19 + Tailwind CSS + shadcn/ui components
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Input placeholder="Enter your email" type="email" />
-                        <div className="flex gap-2">
-                            <Button variant="default">Primary</Button>
-                            <Button variant="secondary">Secondary</Button>
-                            <Button variant="outline">Outline</Button>
-                        </div>
-                        <div className="flex gap-2">
-                            <Button variant="ghost" size="sm">Ghost</Button>
-                            <Button variant="destructive" size="sm">Destructive</Button>
-                            <Button variant="link" size="sm">Link</Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
+        <Router>
+            <Routes>
+                <Route
+                    path="/"
+                    element={
+                        <PublicRoute>
+                            <LandingPage />
+                        </PublicRoute>
+                    }
+                />
+                <Route
+                    path="/login"
+                    element={
+                        <PublicRoute>
+                            <LoginPage />
+                        </PublicRoute>
+                    }
+                />
+                <Route
+                    path="/signup"
+                    element={
+                        <PublicRoute>
+                            <SignupPage />
+                        </PublicRoute>
+                    }
+                />
+
+                <Route
+                    path="/dashboard"
+                    element={
+                        <ProtectedRoute>
+                            <DashboardPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="*"
+                    element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />}
+                />
+            </Routes>
+        </Router>
     )
 }
 

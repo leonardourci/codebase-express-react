@@ -2,6 +2,7 @@ import type { ComponentProps } from "react"
 
 import { cn } from "@/lib/utils"
 
+/* eslint-disable-next-line */
 export interface CardProps extends ComponentProps<"div"> { }
 
 export function Card({ className, ref, ...props }: CardProps) {

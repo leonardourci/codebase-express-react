@@ -35,14 +35,12 @@ const buttonVariants = cva(
 export interface ButtonProps
     extends ComponentProps<"button">,
     VariantProps<typeof buttonVariants> {
-    asChild?: boolean
 }
 
 export function Button({
     className,
     variant,
     size,
-    asChild = false,
     disabled,
     ref,
     ...props
@@ -58,5 +56,3 @@ export function Button({
         />
     )
 }
-
-export { buttonVariants }
