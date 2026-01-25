@@ -1,24 +1,17 @@
 import knex from '../knex'
-import { ISignupResponse } from '../../types/auth'
-import { ICreateUserInput, IUserInfoByEmailResponse, IUser, IUserDbRow } from '../../types/user'
+import { ICreateUserInput, IUserInfoByEmailResponse, IUser, IUserDbRow, EUserDbRowKeys } from '../../types/user'
 import { keysToCamelCase, keysToSnakeCase } from '../../utils/caseConversion'
 
 const USERS_TABLE = 'users'
 
-export async function createUser(input: ICreateUserInput): Promise<ISignupResponse> {
+export async function createUser(input: ICreateUserInput): Promise<IUser> {
 	const insertData = keysToSnakeCase<ICreateUserInput, Partial<IUserDbRow>>(input)
 
 	const [row] = await knex(USERS_TABLE)
 		.insert(insertData)
-		.returning(['id', 'email', 'full_name', 'age', 'phone'])
+		.returning(Object.values(EUserDbRowKeys))
 
-	return {
-		id: row.id,
-		email: row.email,
-		fullName: row.full_name,
-		age: row.age,
-		phone: row.phone
-	}
+	return keysToCamelCase<IUserDbRow, IUser>(row)
 }
 
 export const getUserByEmail = async (input: { email: string }): Promise<IUserInfoByEmailResponse | null> => {
@@ -50,17 +43,20 @@ export const getUserByRefreshToken = async ({ refreshToken }: { refreshToken: st
 	return keysToCamelCase<IUserDbRow, IUser>(row)
 }
 
-export const updateUserById = async ({ userId, updates }: {
-	userId: string,
+export const updateUserById = async ({ id: userId, updates }: {
+	id: string,
 	updates: Partial<Pick<IUser, 'email' | 'fullName' | 'phone' | 'age' | 'passwordHash' | 'refreshToken'>>
 }
-): Promise<void> => {
+): Promise<IUser> => {
 	const updateData = keysToSnakeCase<typeof updates & { updatedAt: Date }, Partial<IUserDbRow>>({
 		...updates,
 		updatedAt: new Date()
 	})
 
-	await knex(USERS_TABLE)
+	const [row] = await knex(USERS_TABLE)
 		.where({ id: userId })
 		.update(updateData)
+		.returning(Object.values(EUserDbRowKeys))
+
+	return keysToCamelCase<IUserDbRow, IUser>(row)
 }

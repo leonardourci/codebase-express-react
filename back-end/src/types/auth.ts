@@ -9,7 +9,3 @@ export interface ILoginResponse {
 }
 
 export type TSignupInput = z.infer<typeof signupSchema>
-
-export interface ISignupResponse extends Omit<TSignupInput, 'password'> {
-	id: string
-}

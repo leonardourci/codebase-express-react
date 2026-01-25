@@ -1,0 +1,30 @@
+import { getUserById, updateUserById } from "../database/repositories/user.repository";
+import { IUser, IUserProfile, TUpdateUserInput } from "../types/user";
+
+export const removeUserSenstive = ({ user }: { user: IUser }): IUserProfile => ({
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    age: user.age,
+    phone: user.phone
+})
+
+export async function getUserProfile({ userId }: { userId: IUser['id'] }): Promise<IUserProfile | null> {
+    const user = await getUserById({ id: userId });
+
+    if (!user) {
+        return null
+    }
+
+    return removeUserSenstive({ user })
+}
+
+export async function updateUserProfile({ userId, updates }: { userId: IUser['id'], updates: TUpdateUserInput }): Promise<IUserProfile | null> {
+    const user = await updateUserById({ id: userId, updates });
+
+    if (!user) {
+        return null
+    }
+
+    return removeUserSenstive({ user })
+}

@@ -9,6 +9,14 @@ describe('tRPC App Router', () => {
         expect(authProcedures).toContain('auth.signup')
     })
 
+    it('should have user procedures', () => {
+        const procedures = appRouter._def.procedures
+        const userProcedures = Object.keys(procedures).filter(key => key.startsWith('user.'))
+        expect(userProcedures.length).toBeGreaterThan(0)
+        expect(userProcedures).toContain('user.getUserById')
+        expect(userProcedures).toContain('user.updateUserById')
+    })
+
     it('should have billing procedures', () => {
         const procedures = appRouter._def.procedures
         const billingProcedures = Object.keys(procedures).filter(key => key.startsWith('billing.'))
@@ -34,10 +42,11 @@ describe('tRPC App Router', () => {
         const procedures = appRouter._def.procedures
         const procedureKeys = Object.keys(procedures)
 
-        // Should have procedures from all three routers
+        // Should have procedures from all routers
         expect(procedureKeys.some(key => key.startsWith('auth.'))).toBe(true)
         expect(procedureKeys.some(key => key.startsWith('billing.'))).toBe(true)
         expect(procedureKeys.some(key => key.startsWith('product.'))).toBe(true)
+        expect(procedureKeys.some(key => key.startsWith('user.'))).toBe(true)
 
         expect(procedureKeys.length).toBeGreaterThan(5) // Should have multiple procedures
     })
@@ -60,29 +69,33 @@ describe('tRPC App Router', () => {
         expect(record.auth).toBeDefined()
         expect(record.billing).toBeDefined()
         expect(record.product).toBeDefined()
+        expect(record.user).toBeDefined()
 
         // Each should be a router - just check they exist
         expect(typeof record.auth).toBe('object')
         expect(typeof record.billing).toBe('object')
         expect(typeof record.product).toBe('object')
+        expect(typeof record.user).toBe('object')
     })
 
     it('should maintain router hierarchy', () => {
         const routerKeys = Object.keys(appRouter._def.record)
-        expect(routerKeys).toEqual(['auth', 'billing', 'product'])
-        expect(routerKeys).toHaveLength(3)
+        expect(routerKeys).toEqual(['auth', 'billing', 'product', 'user'])
+        expect(routerKeys).toHaveLength(4)
     })
 
     it('should have callable procedures in each sub-router', () => {
-        const { auth, billing, product } = appRouter._def.record
+        const { auth, billing, product, user } = appRouter._def.record
 
         // Just check that the routers exist and are objects
         expect(auth).toBeDefined()
         expect(billing).toBeDefined()
         expect(product).toBeDefined()
+        expect(user).toBeDefined()
 
         expect(typeof auth).toBe('object')
         expect(typeof billing).toBe('object')
         expect(typeof product).toBe('object')
+        expect(typeof user).toBe('object')
     })
 })

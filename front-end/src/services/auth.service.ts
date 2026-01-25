@@ -7,12 +7,12 @@ import {
     hasValidAccessToken,
     type TLoginInput,
     type TSignupInput,
-    type IUser,
-    type ILoginResponse
+    type ILoginResponse,
+    IUserProfile
 } from '../utils/auth'
 
 export interface IAuthResponse {
-    user: IUser
+    user: IUserProfile
     accessToken: string
     refreshToken: string
 }
@@ -25,15 +25,10 @@ export class AuthService {
 
         setTokens(response.accessToken, response.refreshToken)
 
-        const user: IUser = {
-            id: '',
-            email: credentials.email,
-            fullName: '',
-            phone: '',
-            age: 0,
-            passwordHash: '',
-            createdAt: new Date(),
-            updatedAt: new Date()
+        const user = await trpcClient.user.getUserById.query()
+
+        if (!user) {
+            throw new Error('User not found')
         }
 
         setUser(user)
@@ -98,7 +93,7 @@ export class AuthService {
         }
     }
 
-    getCurrentUser(): IUser | null {
+    getCurrentUser(): IUserProfile | null {
         return getUser()
     }
 

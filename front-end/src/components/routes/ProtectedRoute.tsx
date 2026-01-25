@@ -22,7 +22,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
                 setIsRefreshing(true)
                 try {
                     await refreshTokens()
-                } catch {
+                } catch (error) {
+                    // Refresh failed - refresh token might be expired or invalid
+                    // User will be redirected to login
+                    console.warn('Token refresh failed:', error)
                 } finally {
                     setIsRefreshing(false)
                 }

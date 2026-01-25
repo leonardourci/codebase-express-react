@@ -1,11 +1,11 @@
-import { TLoginInput, TSignupInput, ILoginResponse, ISignupResponse } from '../../../back-end/src/types/auth'
-import { IUser } from '../../../back-end/src/types/user'
+import { TLoginInput, TSignupInput, ILoginResponse } from '../../../back-end/src/types/auth'
+import { IUser, IUserProfile } from '../../../back-end/src/types/user'
 
 const ACCESS_TOKEN_KEY = 'access_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 const USER_KEY = 'user'
 
-export type { TLoginInput, TSignupInput, IUser, ILoginResponse, ISignupResponse }
+export type { TLoginInput, TSignupInput, IUser, IUserProfile, ILoginResponse }
 
 export interface IAuthTokens {
     accessToken: string
@@ -35,11 +35,11 @@ export const getRefreshToken = (): string | null => {
     return localStorage.getItem(REFRESH_TOKEN_KEY)
 }
 
-export const setUser = (user: IUser): void => {
+export const setUser = (user: IUserProfile): void => {
     localStorage.setItem(USER_KEY, JSON.stringify(user))
 }
 
-export const getUser = (): IUser | null => {
+export const getUser = (): IUserProfile | null => {
     const userStr = localStorage.getItem(USER_KEY)
     return userStr ? JSON.parse(userStr) : null
 }

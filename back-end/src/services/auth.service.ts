@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 import { generateJwtToken, verifyJwtToken } from '../utils/jwt'
 import { CustomError } from '../utils/errors'
 import { EStatusCodes } from '../utils/statusCodes'
-import { TLoginInput, ILoginResponse, TSignupInput, ISignupResponse } from '../types/auth'
+import { TLoginInput, ILoginResponse, TSignupInput } from '../types/auth'
 import { TRefreshTokenInput, IRefreshTokenResponse } from '../types/refreshToken'
 import {
 	createUser,
@@ -11,6 +11,8 @@ import {
 	getUserByRefreshToken,
 	updateUserById
 } from '../database/repositories/user.repository'
+import { removeUserSenstive } from './user.service'
+import { IUserProfile } from '../types/user'
 
 const { HASH_SALT } = process.env
 
@@ -26,7 +28,7 @@ export async function authenticateUser(input: TLoginInput): Promise<ILoginRespon
 	const accessToken = generateJwtToken({ userId: user.id })
 	const refreshToken = accessToken
 
-	await updateUserById({ userId: user.id, updates: { refreshToken } })
+	await updateUserById({ id: user.id, updates: { refreshToken } })
 
 	return {
 		accessToken,
@@ -34,10 +36,12 @@ export async function authenticateUser(input: TLoginInput): Promise<ILoginRespon
 	}
 }
 
-export async function registerUser({ password, ...input }: TSignupInput): Promise<ISignupResponse> {
+export async function registerUser({ password, ...input }: TSignupInput): Promise<IUserProfile> {
 	const passwordHash = bcrypt.hashSync(password, Number(HASH_SALT) ?? '')
 
-	return await createUser({ ...input, passwordHash })
+	const user = await createUser({ ...input, passwordHash })
+
+	return removeUserSenstive({ user })
 }
 
 export async function refreshAccessToken(input: TRefreshTokenInput): Promise<IRefreshTokenResponse> {
@@ -52,7 +56,7 @@ export async function refreshAccessToken(input: TRefreshTokenInput): Promise<IRe
 	const accessToken = generateJwtToken({ userId: user.id })
 	const refreshToken = accessToken
 
-	await updateUserById({ userId: user.id, updates: { refreshToken } })
+	await updateUserById({ id: user.id, updates: { refreshToken } })
 
 	return {
 		accessToken,
@@ -61,5 +65,5 @@ export async function refreshAccessToken(input: TRefreshTokenInput): Promise<IRe
 }
 
 export async function revokeUserRefreshToken(userId: string): Promise<void> {
-	await updateUserById({ userId, updates: { refreshToken: undefined } })
+	await updateUserById({ id: userId, updates: { refreshToken: undefined } })
 }

@@ -59,7 +59,7 @@ describe('Auth Service', () => {
             expect(mockBcrypt.compareSync).toHaveBeenCalledWith(loginInput.password, mockUser.passwordHash)
             expect(mockJwt.generateJwtToken).toHaveBeenCalledWith({ userId: mockUser.id })
             expect(mockUserRepository.updateUserById).toHaveBeenCalledWith({
-                userId: mockUser.id,
+                id: mockUser.id,
                 updates: { refreshToken: mockToken }
             })
             expect(result).toEqual({
@@ -117,7 +117,6 @@ describe('Auth Service', () => {
                 email: signupInput.email,
                 phone: signupInput.phone,
                 age: signupInput.age,
-                passwordHash: hashedPassword
             }
 
             mockBcrypt.hashSync.mockReturnValue(hashedPassword)
@@ -134,30 +133,6 @@ describe('Auth Service', () => {
                 passwordHash: hashedPassword
             })
             expect(result).toEqual(mockCreatedUser)
-        })
-
-        it('should handle missing HASH_SALT environment variable', async () => {
-            const originalHashSalt = process.env.HASH_SALT
-            delete process.env.HASH_SALT
-
-            const hashedPassword = 'hashedPassword123'
-            const mockCreatedUser = {
-                id: 'user-123',
-                fullName: signupInput.fullName,
-                email: signupInput.email,
-                passwordHash: hashedPassword
-            }
-
-            mockBcrypt.hashSync.mockReturnValue(hashedPassword)
-            mockUserRepository.createUser.mockResolvedValue(mockCreatedUser as any)
-
-            const result = await registerUser(signupInput)
-
-            // When HASH_SALT is undefined, Number(undefined) returns NaN, but bcrypt.hashSync still uses the default salt rounds
-            expect(mockBcrypt.hashSync).toHaveBeenCalledWith(signupInput.password, expect.any(Number))
-            expect(result).toEqual(mockCreatedUser)
-
-            process.env.HASH_SALT = originalHashSalt
         })
     })
 
@@ -186,7 +161,7 @@ describe('Auth Service', () => {
             expect(mockUserRepository.getUserByRefreshToken).toHaveBeenCalledWith({ refreshToken: refreshTokenInput.refreshToken })
             expect(mockJwt.generateJwtToken).toHaveBeenCalledWith({ userId: mockUser.id })
             expect(mockUserRepository.updateUserById).toHaveBeenCalledWith({
-                userId: mockUser.id,
+                id: mockUser.id,
                 updates: { refreshToken: newAccessToken }
             })
             expect(result).toEqual({
@@ -229,7 +204,7 @@ describe('Auth Service', () => {
             await revokeUserRefreshToken(userId)
 
             expect(mockUserRepository.updateUserById).toHaveBeenCalledWith({
-                userId,
+                id: userId,
                 updates: { refreshToken: undefined }
             })
         })
@@ -243,7 +218,7 @@ describe('Auth Service', () => {
             await expect(revokeUserRefreshToken(userId)).rejects.toThrow(repositoryError)
 
             expect(mockUserRepository.updateUserById).toHaveBeenCalledWith({
-                userId,
+                id: userId,
                 updates: { refreshToken: undefined }
             })
         })

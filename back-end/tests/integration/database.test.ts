@@ -150,7 +150,7 @@ describe('Database Integration Tests', () => {
                 age: 30
             }
 
-            await updateUserById({ userId: createdUser.id, updates })
+            await updateUserById({ id: createdUser.id, updates })
             const updatedUser = await getUserById({ id: createdUser.id })
 
             expect(updatedUser!.fullName).toBe(updates.fullName)
