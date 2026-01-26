@@ -1,7 +1,7 @@
 import { getUserById, updateUserById } from "../database/repositories/user.repository";
 import { IUser, IUserProfile, TUpdateUserInput } from "../types/user";
 
-export const removeUserSenstive = ({ user }: { user: IUser }): IUserProfile => ({
+export const removeUserSensitive = ({ user }: { user: IUser }): IUserProfile => ({
     id: user.id,
     email: user.email,
     fullName: user.fullName,
@@ -16,7 +16,7 @@ export async function getUserProfile({ userId }: { userId: IUser['id'] }): Promi
         return null
     }
 
-    return removeUserSenstive({ user })
+    return removeUserSensitive({ user })
 }
 
 export async function updateUserProfile({ userId, updates }: { userId: IUser['id'], updates: TUpdateUserInput }): Promise<IUserProfile | null> {
@@ -26,5 +26,5 @@ export async function updateUserProfile({ userId, updates }: { userId: IUser['id
         return null
     }
 
-    return removeUserSenstive({ user })
+    return removeUserSensitive({ user })
 }

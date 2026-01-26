@@ -17,8 +17,9 @@ export const verifyStripeWebhookSignatureMiddleware = (req: Request, res: Respon
 	try {
 		; (req as IBillingRequest).billingEvent = stripe.webhooks.constructEvent(req.body, signature, globalConfig.stripeSecretKey)
 		return next()
-	} catch (err: any) {
-		console.log(`⚠️  Webhook signature verification failed.`, err.message)
+	} catch (err: unknown) {
+		const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+		console.log(`⚠️  Webhook signature verification failed.`, errorMessage)
 		return res.sendStatus(400)
 	}
 }

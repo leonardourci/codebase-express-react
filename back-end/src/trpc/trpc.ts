@@ -27,7 +27,7 @@ const ERROR_STATUS_CODE_TO_TRPC_CODE: Record<number, TRPCErrorCode> = {
   [EStatusCodes.CONFLICT]: 'CONFLICT',
   [EStatusCodes.PRECONDITION_FAILED]: 'PRECONDITION_FAILED',
   [EStatusCodes.UNPROCESSABLE]: 'UNPROCESSABLE_CONTENT',
-  [EStatusCodes.INTERNAL]: 'INTERNAL_SERVER_ERROR'
+  [EStatusCodes.INTERNAL_SERVER_ERROR]: 'INTERNAL_SERVER_ERROR'
 }
 
 const mapStatusCodeToTRPCCode = (statusCode: number): TRPCErrorCode => {

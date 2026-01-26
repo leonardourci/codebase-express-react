@@ -37,10 +37,11 @@ export const authMiddleware = middleware(async ({ ctx, next }) => {
                 user
             }
         })
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Invalid token'
         throw new TRPCError({
             code: 'UNAUTHORIZED',
-            message: error.message || 'Invalid token'
+            message: errorMessage
         })
     }
 })
@@ -81,14 +82,15 @@ export const billingMiddleware = middleware(async ({ ctx, next }) => {
         }
 
         return next()
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof TRPCError) {
             throw error
         }
 
+        const errorMessage = error instanceof Error ? error.message : 'Billing verification failed'
         throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: error.message || 'Billing verification failed'
+            message: errorMessage
         })
     }
 })
