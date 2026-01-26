@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { Menu, X, LogOut, User } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { SignupForm } from '@/components/auth/SignupForm'
 
 interface HeaderProps {
     onMenuToggle?: () => void
@@ -12,6 +14,7 @@ interface HeaderProps {
 export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
     const { user, logout, isAuthenticated } = useAuth()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const [isSignupOpen, setIsSignupOpen] = useState(false)
 
     const handleLogout = async () => {
         await logout()
@@ -23,7 +26,7 @@ export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
     }
 
     return (
-        <header className="bg-background border-b border-border sticky top-0 z-50">
+        <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border sticky top-0 z-50 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Left side - Logo and menu button */}
@@ -41,7 +44,7 @@ export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
                         )}
 
                         <Link to="/" className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
                                 <span className="text-primary-foreground font-bold text-sm">A</span>
                             </div>
                             <span className="font-semibold text-lg hidden sm:block">App Name</span>
@@ -50,6 +53,12 @@ export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
 
                     {/* Desktop navigation */}
                     <nav className="hidden md:flex items-center space-x-4">
+                        <Link to="/pricing">
+                            <Button variant="ghost" size="sm">
+                                Pricing
+                            </Button>
+                        </Link>
+
                         {isAuthenticated ? (
                             <>
                                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -73,11 +82,19 @@ export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
                                         Sign In
                                     </Button>
                                 </Link>
-                                <Link to="/signup">
-                                    <Button size="sm">
-                                        Sign Up
-                                    </Button>
-                                </Link>
+
+                                <Popover open={isSignupOpen} onOpenChange={setIsSignupOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button size="sm" className="shadow-sm">
+                                            Sign Up
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80 p-0 border-none bg-transparent shadow-none" align="end">
+                                        <div className="bg-popover border border-border rounded-lg shadow-lg p-4">
+                                            <SignupForm onSuccess={() => setIsSignupOpen(false)} />
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                             </>
                         )}
                     </nav>
@@ -100,8 +117,13 @@ export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
 
                 {/* Mobile navigation */}
                 {isMobileMenuOpen && (
-                    <div className="md:hidden border-t border-border py-4">
+                    <div className="md:hidden border-t border-border py-4 bg-background/95 backdrop-blur">
                         <nav className="flex flex-col space-y-2">
+                            <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)}>
+                                <Button variant="ghost" className="w-full justify-start">
+                                    Pricing
+                                </Button>
+                            </Link>
                             {isAuthenticated ? (
                                 <>
                                     <div className="flex items-center space-x-2 px-3 py-2 text-sm text-muted-foreground">

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
@@ -8,6 +8,7 @@ import { ProtectedRoute } from './components/routes/ProtectedRoute'
 import { PublicRoute } from './components/routes/PublicRoute'
 import { LoadingSpinner } from './components/ui/loading-spinner'
 import { useAuth } from './hooks/useAuth'
+import { pricingLoader, PricingRoute } from './routes/pricing'
 
 function App() {
     const { isAuthenticated, isLoading } = useAuth()
@@ -16,59 +17,63 @@ function App() {
         return <LoadingSpinner size="lg" text="Loading application..." fullScreen />
     }
 
-    return (
-        <Router>
-            <Routes>
-                <Route
-                    path="/"
-                    element={
-                        <PublicRoute>
-                            <LandingPage />
-                        </PublicRoute>
-                    }
-                />
-                <Route
-                    path="/login"
-                    element={
-                        <PublicRoute>
-                            <LoginPage />
-                        </PublicRoute>
-                    }
-                />
-                <Route
-                    path="/signup"
-                    element={
-                        <PublicRoute>
-                            <SignupPage />
-                        </PublicRoute>
-                    }
-                />
+    const router = createBrowserRouter([
+        {
+            path: "/",
+            element: (
+                <PublicRoute>
+                    <LandingPage />
+                </PublicRoute>
+            ),
+        },
+        {
+            path: "/pricing",
+            element: (
+                <PublicRoute>
+                    <PricingRoute />
+                </PublicRoute>
+            ),
+            loader: pricingLoader,
+        },
+        {
+            path: "/login",
+            element: (
+                <PublicRoute>
+                    <LoginPage />
+                </PublicRoute>
+            ),
+        },
+        {
+            path: "/signup",
+            element: (
+                <PublicRoute>
+                    <SignupPage />
+                </PublicRoute>
+            ),
+        },
+        {
+            path: "/dashboard",
+            element: (
+                <ProtectedRoute>
+                    <DashboardPage />
+                </ProtectedRoute>
+            ),
+        },
+        {
+            path: "/profile",
+            element: (
+                <ProtectedRoute>
+                    <ProfilePage />
+                </ProtectedRoute>
+            ),
+        },
+        {
+            path: "*",
+            element: <Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />,
+        },
+    ])
 
-                <Route
-                    path="/dashboard"
-                    element={
-                        <ProtectedRoute>
-                            <DashboardPage />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/profile"
-                    element={
-                        <ProtectedRoute>
-                            <ProfilePage />
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="*"
-                    element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />}
-                />
-            </Routes>
-        </Router>
-    )
+    return <RouterProvider router={router} />
 }
 
 export default App
