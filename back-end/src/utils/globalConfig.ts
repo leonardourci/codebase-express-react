@@ -1,3 +1,8 @@
+import path from 'path'
+import * as dotenv from 'dotenv'
+
+dotenv.config({ path: path.resolve(__dirname, '..', '..', '..', '.env.backend') })
+
 import { ZodValidationError } from './errors'
 import { globalEnvsSchema } from './validations/envs.schemas'
 

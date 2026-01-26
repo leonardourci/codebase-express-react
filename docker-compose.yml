@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  api:
+    build:
+      context: ./back-end
+    env_file:
+      - ./.env.backend
+    ports:
+      - "3000:3000"
+  web:
+    build:
+      context: .
+      dockerfile: front-end/Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "8080:80"

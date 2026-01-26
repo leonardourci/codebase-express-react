@@ -12,7 +12,7 @@ export const trpc = createTRPCReact<AppRouter>()
 export const trpcClient = trpc.createClient({
     links: [
         httpBatchLink({
-            url: 'http://localhost:3000/trpc',
+            url: import.meta.env.VITE_API_BASE,
             headers: () => {
                 const token = getAccessToken()
                 return token ? { Authorization: `Bearer ${token}` } : {}
