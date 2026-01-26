@@ -8,7 +8,7 @@ import { ProtectedRoute } from './components/routes/ProtectedRoute'
 import { PublicRoute } from './components/routes/PublicRoute'
 import { LoadingSpinner } from './components/ui/loading-spinner'
 import { useAuth } from './hooks/useAuth'
-import { pricingLoader, PricingRoute } from './routes/pricing'
+import { PricingRoute } from './routes/pricing'
 
 function App() {
     const { isAuthenticated, isLoading } = useAuth()
@@ -33,7 +33,6 @@ function App() {
                     <PricingRoute />
                 </PublicRoute>
             ),
-            loader: pricingLoader,
         },
         {
             path: "/login",

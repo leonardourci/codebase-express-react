@@ -1,28 +1,18 @@
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
-import type { AppRouter } from '../../../back-end/src/trpc/router'
 import { PricingCard } from '@/components/pricing/PricingCard'
 import { Header } from '@/components/layout/Header'
-import { useLoaderData } from 'react-router-dom'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { trpc } from '@/lib/trpc'
 
-export async function pricingLoader() {
-    const client = createTRPCProxyClient<AppRouter>({
-        links: [
-            httpBatchLink({
-                url: import.meta.env.VITE_API_BASE,
-                maxURLLength: 2083,
-            }),
-        ],
-    })
-    const raw = await client.product.getAll.query()
-    const products = raw.map((p: any) => ({
+// Shared transformation logic
+export function transformProduct(p: any) {
+    return {
         id: p.id,
         name: p.name,
         description: p.description,
         price: typeof p.price === 'number' ? p.price : (p.priceInCents ? Math.round(p.priceInCents) / 100 : 0),
         currency: p.currency || 'USD',
         features: Array.isArray(p.features) ? p.features : [],
-    }))
-    return { products }
+    }
 }
 
 export function PricingView({ products }: { products: Array<{ id: string; name: string; description: string; price: number; currency: string; features?: string[] }> }) {
@@ -57,6 +47,34 @@ export function PricingView({ products }: { products: Array<{ id: string; name: 
 }
 
 export function PricingRoute() {
-    const { products } = useLoaderData() as { products: Array<{ id: string; name: string; description: string; price: number; currency: string; features?: string[] }> }
-    return <PricingView products={products} />
+    const { data: products, isLoading, error } = trpc.product.getAll.useQuery()
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col">
+                <Header />
+                <main className="flex-1 flex items-center justify-center">
+                    <LoadingSpinner />
+                </main>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col">
+                <Header />
+                <main className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold text-destructive mb-2">Failed to load pricing</h2>
+                        <p className="text-muted-foreground">Please try again later</p>
+                    </div>
+                </main>
+            </div>
+        )
+    }
+
+    const transformedProducts = products?.map(transformProduct) || []
+
+    return <PricingView products={transformedProducts} />
 }
