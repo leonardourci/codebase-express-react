@@ -6,6 +6,8 @@ dotenv.config({ path: path.resolve(__dirname, '..', '..', '..', '.env.backend') 
 import { ZodValidationError } from './errors'
 import { globalEnvsSchema } from './validations/envs.schemas'
 
+export const DEFAULT_FRONTEND_LOCALHOST = 'http://localhost:5173'
+
 const { data, error } = globalEnvsSchema.safeParse(process.env)
 
 if (error) {
@@ -18,5 +20,6 @@ export default {
 	databaseConnectionString: data.DATABASE_CONNECTION_STRING,
 	hashSalt: data.HASH_SALT,
 	jwtSecret: data.JWT_SECRET,
-	stripeSecretKey: data.STRIPE_SECRET_KEY
+	stripeSecretKey: data.STRIPE_SECRET_KEY,
+	allowedOrigins: (data.ALLOWED_ORIGINS || DEFAULT_FRONTEND_LOCALHOST).split(',').map(origin => origin.trim())
 } as const

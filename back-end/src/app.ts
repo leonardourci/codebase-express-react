@@ -1,24 +1,50 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import * as trpcExpress from '@trpc/server/adapters/express'
 
 import { processBillingWebhookHandler } from './controllers/billing.controller'
 import { verifyStripeWebhookSignatureMiddleware } from './middlewares/billing.middleware'
 import { appRouter, createTRPCContext } from './trpc'
+import globalConfig from './utils/globalConfig'
 
 const app = express()
 
+app.use(helmet())
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+app.use(limiter)
+
+app.use(cors({
+  origin: globalConfig.allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  })
+})
+
 app.post('/webhooks/stripe',
-  express.raw({ type: 'application/json' }),
+  express.raw({ type: 'application/json', limit: '1mb' }),
   verifyStripeWebhookSignatureMiddleware,
   processBillingWebhookHandler
 )
 
-app.options('*', cors())
-app.use(cors())
-
-// to parse incoming JSON data from requests
-app.use(express.json())
+app.use(express.json({ limit: '10mb' }))
 
 // Mount tRPC on /trpc route
 app.use(

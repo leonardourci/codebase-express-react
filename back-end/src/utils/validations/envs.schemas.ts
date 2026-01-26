@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { ENodeEnvs } from '../../types/envs'
+import { DEFAULT_FRONTEND_LOCALHOST } from '../constants'
 
 export const globalEnvsSchema = z.object({
     NODE_ENV: z.enum([ENodeEnvs.DEVELOPMENT, ENodeEnvs.PRODUCTION, ENodeEnvs.TEST]),
@@ -7,5 +8,6 @@ export const globalEnvsSchema = z.object({
     DATABASE_CONNECTION_STRING: z.string().min(1, 'Database connection string is required'),
     HASH_SALT: z.coerce.number().int().positive(),
     JWT_SECRET: z.string().min(1, 'JWT secret is required'),
-    STRIPE_SECRET_KEY: z.string().min(1, 'Stripe secret key is required')
+    STRIPE_SECRET_KEY: z.string().min(1, 'Stripe secret key is required'),
+    ALLOWED_ORIGINS: z.string().optional().default(DEFAULT_FRONTEND_LOCALHOST)
 })

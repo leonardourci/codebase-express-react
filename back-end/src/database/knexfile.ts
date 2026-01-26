@@ -1,5 +1,6 @@
 import { Knex } from 'knex'
 import globalConfig from '../utils/globalConfig'
+import path from 'path'
 
 const config: Knex.Config = {
 	client: 'pg',
@@ -8,8 +9,8 @@ const config: Knex.Config = {
 		: globalConfig.databaseConnectionString,
 	migrations: {
 		tableName: 'knex_migrations',
-		directory: './src/db/migrations',
-		extension: 'ts'
+		directory: path.join(__dirname, '../db/migrations'),
+		extension: globalConfig.nodeEnv === 'production' ? 'js' : 'ts'
 	}
 }
 
