@@ -1,7 +1,9 @@
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
 import type { AppRouter } from '../../../back-end/src/trpc/router'
+import type { IProduct } from '@/types/product'
+import { globalConfig } from '@/utils/global-config'
 
-export type PricingProduct = {
+export interface PricingPlan {
     id: string
     name: string
     description: string
@@ -10,22 +12,22 @@ export type PricingProduct = {
     features: string[]
 }
 
-export function transformProduct(p: any): PricingProduct {
+export function transformProduct(p: IProduct): PricingPlan {
     return {
         id: p.id,
         name: p.name,
         description: p.description,
-        price: typeof p.price === 'number' ? p.price : (p.priceInCents ? Math.round(p.priceInCents) / 100 : 0),
+        price: p.priceInCents / 100, // Convert cents to dollars
         currency: p.currency || 'USD',
-        features: Array.isArray(p.features) ? p.features : [],
+        features: [], // Products don't have features in backend, could be added later
     }
 }
 
-export async function fetchPricingProducts(apiBase?: string): Promise<PricingProduct[]> {
+export async function fetchPricingProducts(apiBase?: string): Promise<PricingPlan[]> {
     const client = createTRPCProxyClient<AppRouter>({
         links: [
             httpBatchLink({
-                url: apiBase || import.meta.env.VITE_API_BASE || 'http://localhost:3000/trpc',
+                url: apiBase || globalConfig.apiBase,
                 maxURLLength: 2083,
             }),
         ],
@@ -35,7 +37,7 @@ export async function fetchPricingProducts(apiBase?: string): Promise<PricingPro
     return raw.map(transformProduct)
 }
 
-export const MOCK_PRICING_PRODUCTS: PricingProduct[] = [
+export const MOCK_PRICING_PRODUCTS: PricingPlan[] = [
     {
         id: 'prod_mock_1',
         name: 'Pro Plan',

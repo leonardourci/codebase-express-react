@@ -5,11 +5,9 @@ import {
     clearAuthData,
     getRefreshToken,
     hasValidAccessToken,
-    type TLoginInput,
-    type TSignupInput,
-    type ILoginResponse,
-    IUserProfile
+    getUser,
 } from '../utils/auth'
+import type { TLoginInput, TSignupInput, ILoginResponse, IUserProfile } from '@/types'
 
 export interface IAuthResponse {
     user: IUserProfile
@@ -103,6 +101,3 @@ export class AuthService {
 }
 
 export const authService = new AuthService()
-
-import { getUser } from '../utils/auth'
-export { getUser }

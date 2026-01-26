@@ -1,74 +1,47 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useAuth } from '@/hooks/useAuth'
-import { signupSchema } from '../../../../back-end/src/utils/validations/auth.schemas'
-import { TSignupInput } from '../../../../back-end/src/types/auth'
-
-interface SignupFormData extends TSignupInput {
-    confirmPassword: string
-}
+import { useFormValidation } from '@/hooks/useFormValidation'
+import { signupSchema, type TSignUpFormInput } from '@/validations/auth.schemas'
+import { type TSignupInput } from '@/types/auth'
 
 export function SignupForm({ onSuccess }: { onSuccess?: () => void }) {
-    const [formData, setFormData] = useState<SignupFormData>({
-        fullName: '',
-        email: '',
-        phone: '',
-        password: '',
-        confirmPassword: '',
-        age: 0
-    })
-    const [errors, setErrors] = useState<Record<string, string>>({})
-
     const { signup, isLoading } = useAuth()
     const navigate = useNavigate()
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setErrors({})
+    const {
+        formData,
+        errors,
+        handleInputChange,
+        handleSubmit,
+    } = useFormValidation<TSignUpFormInput>(
+        {
+            fullName: '',
+            email: '',
+            phone: '',
+            password: '',
+            confirmPassword: '',
+            age: 0
+        },
+        signupSchema
+    )
 
-        if (formData.password !== formData.confirmPassword) {
-            setErrors({ confirmPassword: 'Passwords do not match' })
-            return
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { confirmPassword: _, ...dataToValidate } = formData
-
-        const result = signupSchema.safeParse(dataToValidate)
-        if (!result.success) {
-            const validationErrors: Record<string, string> = {}
-            result.error.issues.forEach((issue) => {
-                const path = issue.path.join('.')
-                validationErrors[path] = issue.message
-            })
-            setErrors(validationErrors)
-            return
-        }
-
-        try {
-            await signup(result.data)
-            onSuccess?.()
-            navigate('/dashboard')
-        } catch (error) {
-            setErrors({
-                general: error instanceof Error ? error.message : 'Signup failed. Please try again.'
-            })
-        }
-    }
-
-    const handleInputChange = (field: keyof SignupFormData, value: string | number) => {
-        setFormData(prev => ({ ...prev, [field]: value }))
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }))
-        }
+    const onSubmit = async (data: TSignUpFormInput) => {
+        // Remove confirmPassword before sending to API
+        const { confirmPassword, ...signupData } = data
+        await signup(signupData as TSignupInput)
+        onSuccess?.()
+        navigate('/dashboard')
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={(e) => {
+            e.preventDefault()
+            handleSubmit(onSubmit)
+        }} className="space-y-4">
             <div className="space-y-2 text-center mb-4">
                 <h3 className="font-semibold text-lg tracking-tight">Create Account</h3>
                 <p className="text-sm text-muted-foreground">Enter your details to sign up</p>

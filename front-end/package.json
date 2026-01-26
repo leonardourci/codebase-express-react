@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite --mode frontend",
     "build": "vite build --mode frontend",
-    "postbuild": "tsx scripts/prerender-pricing.ts",
     "lint": "eslint .",
     "preview": "vite preview --mode frontend"
   },

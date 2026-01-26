@@ -2,20 +2,29 @@ import { PricingCard } from '@/components/pricing/PricingCard'
 import { Header } from '@/components/layout/Header'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { trpc } from '@/lib/trpc'
+import type { IProduct } from '@/types/product'
 
-// Shared transformation logic
-export function transformProduct(p: any) {
+export interface PricingPlan {
+    id: string
+    name: string
+    description: string
+    price: number
+    currency: string
+    features: string[]
+}
+
+export function transformProduct(p: IProduct): PricingPlan {
     return {
         id: p.id,
         name: p.name,
         description: p.description,
-        price: typeof p.price === 'number' ? p.price : (p.priceInCents ? Math.round(p.priceInCents) / 100 : 0),
+        price: p.priceInCents / 100, // Convert cents to dollars
         currency: p.currency || 'USD',
-        features: Array.isArray(p.features) ? p.features : [],
+        features: [], // Products don't have features in backend, could be added later
     }
 }
 
-export function PricingView({ products }: { products: Array<{ id: string; name: string; description: string; price: number; currency: string; features?: string[] }> }) {
+export function PricingView({ products }: { products: PricingPlan[] }) {
     return (
         <div className="min-h-screen bg-background flex flex-col">
             <Header />
@@ -36,7 +45,7 @@ export function PricingView({ products }: { products: Array<{ id: string; name: 
                             description={p.description}
                             price={p.price}
                             currency={p.currency}
-                            features={p.features || []}
+                            features={p.features}
                             popular
                         />
                     ))}

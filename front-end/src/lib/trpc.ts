@@ -2,6 +2,7 @@ import { createTRPCReact } from '@trpc/react-query'
 import { httpBatchLink } from '@trpc/client'
 import type { AppRouter } from '../../../back-end/src/trpc/router'
 import { getAccessToken } from '../utils/auth'
+import { globalConfig } from '@/utils/global-config'
 
 // Maximum URL length supported by Internet Explorer and most browsers/proxies
 // Used to determine when tRPC should switch from GET to POST for batched requests
@@ -12,7 +13,7 @@ export const trpc = createTRPCReact<AppRouter>()
 export const trpcClient = trpc.createClient({
     links: [
         httpBatchLink({
-            url: import.meta.env.VITE_API_BASE,
+            url: globalConfig.apiBase,
             headers: () => {
                 const token = getAccessToken()
                 return token ? { Authorization: `Bearer ${token}` } : {}

@@ -1,55 +1,30 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useAuth } from '@/hooks/useAuth'
-import { loginSchema } from '../../../back-end/src/utils/validations/auth.schemas'
-import { TLoginInput } from '../../../back-end/src/types/auth'
+import { useFormValidation } from '@/hooks/useFormValidation'
+import { TLoginInput } from '@/types/auth'
+import { loginSchema } from '@/validations/auth.schemas'
 
 export function LoginPage() {
-    const [formData, setFormData] = useState<TLoginInput>({
-        email: '',
-        password: ''
-    })
-    const [errors, setErrors] = useState<Record<string, string>>({})
-
     const { login, isLoading } = useAuth()
     const navigate = useNavigate()
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setErrors({})
+    const {
+        formData,
+        errors,
+        handleInputChange,
+        handleSubmit,
+    } = useFormValidation<TLoginInput>(
+        { email: '', password: '' },
+        loginSchema
+    )
 
-        const result = loginSchema.safeParse(formData)
-        if (!result.success) {
-            const validationErrors: Record<string, string> = {}
-            result.error.issues.forEach((issue) => {
-                const path = issue.path.join('.')
-                validationErrors[path] = issue.message
-            })
-            setErrors(validationErrors)
-            return
-        }
-
-        try {
-            await login(result.data)
-            navigate('/dashboard')
-        } catch (error) {
-            setErrors({
-                general: error instanceof Error ? error.message : 'Login failed. Please try again.'
-            })
-        }
-    }
-
-    const handleInputChange = (field: keyof TLoginInput, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }))
-
-        // Clear error when user starts typing
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }))
-        }
+    const onSubmit = async (data: TLoginInput) => {
+        await login(data)
+        navigate('/dashboard')
     }
 
     return (
@@ -62,7 +37,10 @@ export function LoginPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={(e) => {
+                        e.preventDefault()
+                        handleSubmit(onSubmit)
+                    }} className="space-y-4">
                         {errors.general && (
                             <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/20 rounded-md">
                                 {errors.general}

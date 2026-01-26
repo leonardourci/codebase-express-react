@@ -3,7 +3,8 @@ import path from 'path'
 import React from 'react'
 import { renderToString } from 'react-dom/server'
 import { PricingView } from '../src/routes/pricing'
-import { fetchPricingProducts, MOCK_PRICING_PRODUCTS, type PricingProduct } from '../src/utils/pricing'
+import { fetchPricingProducts, MOCK_PRICING_PRODUCTS } from '../src/utils/pricing'
+import type { PricingPlan } from '../src/utils/pricing'
 
 async function main() {
     const distDir = path.resolve(__dirname, '../dist')
@@ -15,7 +16,7 @@ async function main() {
         throw new Error('dist/index.html not found. Run "vite build" before prerendering.')
     }
 
-    let products: PricingProduct[]
+    let products: PricingPlan[]
     try {
         const apiBase = process.env.VITE_API_BASE || 'http://localhost:3000/trpc'
         products = await fetchPricingProducts(apiBase)

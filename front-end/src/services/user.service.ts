@@ -1,18 +1,12 @@
 import { trpcClient } from '../lib/trpc'
-
-export interface IUpdateUserInput {
-    fullName?: string
-    email?: string
-    phone?: string
-    age?: number
-}
+import type { TUpdateUserInput } from '@/types'
 
 export class UserService {
     async getProfile() {
         return await trpcClient.user.getUserById.query()
     }
 
-    async updateProfile(updates: IUpdateUserInput) {
+    async updateProfile(updates: TUpdateUserInput) {
         return await trpcClient.user.updateUserById.mutate(updates)
     }
 }

@@ -1,20 +1,11 @@
-import { TLoginInput, TSignupInput, ILoginResponse } from '../../../back-end/src/types/auth'
-import { IUser, IUserProfile } from '../../../back-end/src/types/user'
+import type { IUserProfile } from '@/types/user'
+import { STORAGE_KEYS } from '@/constants'
 
-const ACCESS_TOKEN_KEY = 'access_token'
-const REFRESH_TOKEN_KEY = 'refresh_token'
-const USER_KEY = 'user'
-
-export type { TLoginInput, TSignupInput, IUser, IUserProfile, ILoginResponse }
+const ACCESS_TOKEN_KEY = STORAGE_KEYS.ACCESS_TOKEN
+const REFRESH_TOKEN_KEY = STORAGE_KEYS.REFRESH_TOKEN
+const USER_KEY = STORAGE_KEYS.USER
 
 export interface IAuthTokens {
-    accessToken: string
-    refreshToken: string
-}
-
-// Frontend-specific auth response that includes user data
-export interface IAuthResponse {
-    user: IUser
     accessToken: string
     refreshToken: string
 }

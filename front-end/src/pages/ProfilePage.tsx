@@ -5,18 +5,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { useUser } from '@/hooks/useUser'
-import { updateUserSchema } from '../../../back-end/src/utils/validations/user.schemas'
-import { type IUpdateUserInput } from '@/services/user.service'
-import { type IUserProfile } from '@/utils/auth'
+import { useFormValidation } from '@/hooks/useFormValidation'
+import type { IUserProfile, TUpdateUserInput } from '@/types/user'
 import { User, Mail, Phone, Calendar, Save } from 'lucide-react'
+import { updateUserSchema } from '@/validations/user.schemas'
 
 export function ProfilePage() {
     const { isLoading, error, getProfile, updateProfile } = useUser()
     const [profile, setProfile] = useState<IUserProfile | null>(null)
-    const [formData, setFormData] = useState<IUpdateUserInput>({})
-    const [errors, setErrors] = useState<Record<string, string>>({})
-    const [isUpdating, setIsUpdating] = useState(false)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+    const {
+        formData,
+        setFormData,
+        errors,
+        handleInputChange,
+        handleSubmit,
+        isSubmitting,
+    } = useFormValidation<TUpdateUserInput>(
+        {
+            fullName: '',
+            email: '',
+            phone: '',
+            age: 0
+        },
+        updateUserSchema
+    )
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -35,58 +49,29 @@ export function ProfilePage() {
         }
 
         loadProfile()
-    }, [getProfile])
+    }, [getProfile, setFormData])
 
-    const handleInputChange = (field: keyof IUpdateUserInput, value: string | number) => {
-        setFormData(prev => ({ ...prev, [field]: value }))
-        setSuccessMessage(null)
-
-        // Clear error when user starts typing
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }))
-        }
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setErrors({})
-        setSuccessMessage(null)
-
+    const onSubmit = async (data: TUpdateUserInput) => {
         // Only include changed fields
-        const updates: IUpdateUserInput = {}
-        if (formData.fullName !== profile?.fullName) updates.fullName = formData.fullName
-        if (formData.email !== profile?.email) updates.email = formData.email
-        if (formData.phone !== profile?.phone) updates.phone = formData.phone
-        if (formData.age !== profile?.age) updates.age = formData.age
+        const updates: TUpdateUserInput = {}
+        if (data.fullName !== profile?.fullName) updates.fullName = data.fullName
+        if (data.email !== profile?.email) updates.email = data.email
+        if (data.phone !== profile?.phone) updates.phone = data.phone
+        if (data.age !== profile?.age) updates.age = data.age
 
         if (Object.keys(updates).length === 0) {
             setSuccessMessage('No changes to save')
             return
         }
 
-        const result = updateUserSchema.safeParse(updates)
-        if (!result.success) {
-            const validationErrors: Record<string, string> = {}
-            result.error.issues.forEach((issue) => {
-                const path = issue.path.join('.')
-                validationErrors[path] = issue.message
-            })
-            setErrors(validationErrors)
-            return
-        }
+        const updatedProfile = await updateProfile(updates)
+        setProfile(updatedProfile)
+        setSuccessMessage('Profile updated successfully!')
+    }
 
-        setIsUpdating(true)
-        try {
-            const updatedProfile = await updateProfile(updates)
-            setProfile(updatedProfile)
-            setSuccessMessage('Profile updated successfully!')
-        } catch (err) {
-            setErrors({
-                general: err instanceof Error ? err.message : 'Failed to update profile'
-            })
-        } finally {
-            setIsUpdating(false)
-        }
+    const handleFormInputChange = (field: keyof TUpdateUserInput, value: string | number) => {
+        handleInputChange(field, value)
+        setSuccessMessage(null)
     }
 
     if (isLoading && !profile) {
@@ -143,7 +128,10 @@ export function ProfilePage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <form onSubmit={handleSubmit} className="space-y-4">
+                                <form onSubmit={(e) => {
+                                    e.preventDefault()
+                                    handleSubmit(onSubmit)
+                                }} className="space-y-4">
                                     {errors.general && (
                                         <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/20 rounded-md">
                                             {errors.general}
@@ -166,7 +154,7 @@ export function ProfilePage() {
                                                 type="text"
                                                 placeholder="Enter your full name"
                                                 value={formData.fullName || ''}
-                                                onChange={(e) => handleInputChange('fullName', e.target.value)}
+                                                onChange={(e) => handleFormInputChange('fullName', e.target.value)}
                                                 className={errors.fullName ? 'border-destructive' : ''}
                                             />
                                             {errors.fullName && (
@@ -183,7 +171,7 @@ export function ProfilePage() {
                                                 type="email"
                                                 placeholder="Enter your email"
                                                 value={formData.email || ''}
-                                                onChange={(e) => handleInputChange('email', e.target.value)}
+                                                onChange={(e) => handleFormInputChange('email', e.target.value)}
                                                 className={errors.email ? 'border-destructive' : ''}
                                             />
                                             {errors.email && (
@@ -200,7 +188,7 @@ export function ProfilePage() {
                                                 type="tel"
                                                 placeholder="Enter your phone number"
                                                 value={formData.phone || ''}
-                                                onChange={(e) => handleInputChange('phone', e.target.value)}
+                                                onChange={(e) => handleFormInputChange('phone', e.target.value)}
                                                 className={errors.phone ? 'border-destructive' : ''}
                                             />
                                             {errors.phone && (
@@ -217,7 +205,7 @@ export function ProfilePage() {
                                                 type="number"
                                                 placeholder="Enter your age"
                                                 value={formData.age || ''}
-                                                onChange={(e) => handleInputChange('age', parseInt(e.target.value) || 0)}
+                                                onChange={(e) => handleFormInputChange('age', parseInt(e.target.value) || 0)}
                                                 className={errors.age ? 'border-destructive' : ''}
                                                 min="13"
                                                 max="120"
@@ -231,10 +219,10 @@ export function ProfilePage() {
                                     <div className="flex justify-end">
                                         <Button
                                             type="submit"
-                                            disabled={isUpdating}
+                                            disabled={isSubmitting}
                                             className="flex items-center gap-2"
                                         >
-                                            {isUpdating ? (
+                                            {isSubmitting ? (
                                                 <>
                                                     <LoadingSpinner size="sm" />
                                                     Saving...
