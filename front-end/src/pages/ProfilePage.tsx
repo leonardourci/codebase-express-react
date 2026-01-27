@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorMessage } from '@/components/ui/error-message'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { useUser } from '@/hooks/useUser'
 import { useFormValidation } from '@/hooks/useFormValidation'
@@ -130,11 +131,7 @@ export function ProfilePage() {
                                     e.preventDefault()
                                     handleSubmit(onSubmit)
                                 }} className="space-y-5">
-                                    {errors.general && (
-                                        <div className="p-4 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/20 rounded-lg">
-                                            {errors.general}
-                                        </div>
-                                    )}
+                                    <ErrorMessage message={errors.general} />
 
                                     {successMessage && (
                                         <div className="p-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg">

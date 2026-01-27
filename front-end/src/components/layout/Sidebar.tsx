@@ -1,12 +1,14 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { cn } from '@/lib/utils'
+import { trpc } from '@/lib/trpc'
+import { getAccessToken } from '@/utils/auth'
 import {
     Home,
-    Settings,
     User,
     CreditCard,
-    BarChart3,
     X
 } from 'lucide-react'
 
@@ -19,13 +21,44 @@ interface SidebarProps {
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Profile', href: '/profile', icon: User },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-    { name: 'Billing', href: '/billing', icon: CreditCard },
-    { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 export function Sidebar({ isOpen = true, onClose, className }: SidebarProps) {
     const location = useLocation()
+    const [isLoadingPortal, setIsLoadingPortal] = useState(false)
+    const [portalError, setPortalError] = useState<string | null>(null)
+
+    const createPortalSession = trpc.billing.createCustomerPortalSession.useMutation()
+
+    const handleManageSubscription = async () => {
+        setIsLoadingPortal(true)
+        setPortalError(null)
+
+        try {
+            const token = getAccessToken()
+            if (!token) {
+                setPortalError('Authentication required')
+                setIsLoadingPortal(false)
+                return
+            }
+
+            const result = await createPortalSession.mutateAsync({
+                token,
+                returnUrl: `${window.location.origin}/dashboard`
+            })
+
+            if (result.url) {
+                // Close sidebar on mobile before redirect
+                onClose?.()
+                // Redirect to Stripe Customer Portal
+                window.location.href = result.url
+            }
+        } catch (error: any) {
+            const errorMessage = error?.message || 'Failed to access billing portal'
+            setPortalError(errorMessage)
+            setIsLoadingPortal(false)
+        }
+    }
 
     return (
         <>
@@ -83,6 +116,32 @@ export function Sidebar({ isOpen = true, onClose, className }: SidebarProps) {
                                 </Link>
                             )
                         })}
+
+                        <div className="pt-2 mt-2 border-t border-border/50">
+                            <Button
+                                onClick={handleManageSubscription}
+                                disabled={isLoadingPortal}
+                                variant="ghost"
+                                className="w-full justify-start px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            >
+                                {isLoadingPortal ? (
+                                    <>
+                                        <LoadingSpinner size="sm" className="mr-3" />
+                                        <span>Loading...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CreditCard className="h-5 w-5 mr-3" />
+                                        <span>Manage Subscription</span>
+                                    </>
+                                )}
+                            </Button>
+                            {portalError && (
+                                <p className="text-xs text-destructive px-4 mt-1">
+                                    {portalError}
+                                </p>
+                            )}
+                        </div>
                     </nav>
 
                     <div className="p-4 border-t border-border/50">

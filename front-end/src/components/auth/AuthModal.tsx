@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorMessage } from '@/components/ui/error-message'
 import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover'
 import {
   Dialog,
@@ -93,11 +94,7 @@ function AuthForm({ mode, onSwitchMode, onSuccess }: AuthFormProps) {
         className="space-y-4"
         data-slot="auth-form"
       >
-        {loginErrors.general && (
-          <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/20 rounded-lg">
-            {loginErrors.general}
-          </div>
-        )}
+        <ErrorMessage message={loginErrors.general} className="p-3" />
 
         <GoogleAuthButton onSuccess={onSuccess} />
         <AuthDivider />
@@ -166,11 +163,7 @@ function AuthForm({ mode, onSwitchMode, onSuccess }: AuthFormProps) {
       className="space-y-4"
       data-slot="auth-form"
     >
-      {signupErrors.general && (
-        <div className="p-3 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/20 rounded-lg">
-          {signupErrors.general}
-        </div>
-      )}
+      <ErrorMessage message={signupErrors.general} className="p-3" />
 
       <GoogleAuthButton onSuccess={onSuccess} />
       <AuthDivider />

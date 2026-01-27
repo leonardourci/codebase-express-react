@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthModal } from '@/contexts/AuthModalContext'
@@ -14,11 +14,13 @@ interface HeaderProps {
 export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
     const { user, logout, isAuthenticated } = useAuth()
     const { openAuth } = useAuthModal()
+    const navigate = useNavigate()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
     const handleLogout = async () => {
         await logout()
         setIsMobileMenuOpen(false)
+        navigate('/login')
     }
 
     const toggleMobileMenu = () => {
@@ -56,11 +58,13 @@ export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
                     </div>
 
                     <nav className="hidden md:flex items-center space-x-2">
-                        <Link to="/pricing">
-                            <Button variant="ghost" size="sm">
-                                Pricing
-                            </Button>
-                        </Link>
+                        {!isAuthenticated && (
+                            <Link to="/pricing">
+                                <Button variant="ghost" size="sm">
+                                    Pricing
+                                </Button>
+                            </Link>
+                        )}
 
                         {isAuthenticated ? (
                             <>
@@ -126,11 +130,6 @@ export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
                 {isMobileMenuOpen && isAuthenticated && (
                     <div className="md:hidden border-t border-border/50 py-4 bg-background/95 backdrop-blur-md">
                         <nav className="flex flex-col space-y-2">
-                            <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)}>
-                                <Button variant="ghost" className="w-full justify-start">
-                                    Pricing
-                                </Button>
-                            </Link>
                             <div className="flex items-center space-x-2 px-3 py-2 text-sm text-muted-foreground">
                                 <User className="h-4 w-4" />
                                 <span>{user?.fullName || user?.email}</span>

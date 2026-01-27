@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorMessage } from '@/components/ui/error-message'
 import { useAuth } from '@/hooks/useAuth'
 import { useFormValidation } from '@/hooks/useFormValidation'
 import { TLoginInput } from '@/types/auth'
@@ -47,11 +48,7 @@ export function LoginPage() {
                             e.preventDefault()
                             handleSubmit(onSubmit)
                         }} className="space-y-5">
-                            {errors.general && (
-                                <div className="p-4 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/20 rounded-lg">
-                                    {errors.general}
-                                </div>
-                            )}
+                            <ErrorMessage message={errors.general} />
 
                             <GoogleAuthButton />
                             <AuthDivider />

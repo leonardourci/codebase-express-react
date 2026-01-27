@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorMessage } from '@/components/ui/error-message'
 import { useAuth } from '@/hooks/useAuth'
 import { useFormValidation } from '@/hooks/useFormValidation'
 import { signupSchema, type TSignUpFormInput } from '@/validations/auth.schemas'
@@ -47,11 +48,7 @@ export function SignupForm({ onSuccess }: { onSuccess?: () => void }) {
                 <p className="text-sm text-muted-foreground">Enter your details to sign up</p>
             </div>
 
-            {errors.general && (
-                <div className="p-2 text-sm text-destructive-foreground bg-destructive/10 border border-destructive/20 rounded-md">
-                    {errors.general}
-                </div>
-            )}
+            <ErrorMessage message={errors.general} className="p-2 rounded-md" />
 
             <div className="grid gap-3">
                 <div className="space-y-2">
