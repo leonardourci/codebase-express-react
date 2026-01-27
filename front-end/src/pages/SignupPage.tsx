@@ -9,6 +9,8 @@ import { useFormValidation } from '@/hooks/useFormValidation'
 import { TSignUpFormInput, signupSchema } from '@/validations/auth.schemas'
 import { TSignupInput } from '@/types/auth'
 import { Header } from '@/components/layout/Header'
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton'
+import { AuthDivider } from '@/components/auth/AuthDivider'
 
 export function SignupPage() {
     const { signup, isLoading } = useAuth()
@@ -58,6 +60,10 @@ export function SignupPage() {
                                     {errors.general}
                                 </div>
                             )}
+
+                            <GoogleAuthButton />
+                            <AuthDivider />
+
 
                             <div className="space-y-2">
                                 <Label htmlFor="fullName" className="text-base font-medium">
