@@ -1,13 +1,18 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
 import App from './App.tsx'
 import { TRPCProvider } from './providers/trpc-provider'
 
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-        <TRPCProvider>
-            <App />
-        </TRPCProvider>
+        <GoogleOAuthProvider clientId={googleClientId}>
+            <TRPCProvider>
+                <App />
+            </TRPCProvider>
+        </GoogleOAuthProvider>
     </StrictMode>,
 )
