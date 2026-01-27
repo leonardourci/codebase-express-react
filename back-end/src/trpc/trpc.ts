@@ -85,12 +85,25 @@ export const createTRPCContext = (opts: { req: Request; res: Response }): ITRPCC
 // Initialize tRPC instance
 const t = initTRPC.context<ITRPCContext>().create({
   errorFormatter({ shape, error }) {
+    const isProduction = process.env.NODE_ENV === 'production'
+
+    // In production, remove sensitive data like stack traces and internal paths
+    // In development, keep full error details for debugging
+    if (isProduction) {
+      return {
+        ...shape,
+        data: {
+          code: shape.data.code,
+          httpStatus: shape.data.httpStatus
+        }
+      }
+    }
+
     return {
       ...shape,
       data: {
         ...shape.data,
-        // Preserve custom error details for framework-agnostic error handling
-        details: error.cause || undefined
+        details: error.cause
       }
     }
   }
