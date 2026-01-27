@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom'
 import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
@@ -9,6 +9,17 @@ import { PublicRoute } from './components/routes/PublicRoute'
 import { LoadingSpinner } from './components/ui/loading-spinner'
 import { useAuth } from './hooks/useAuth'
 import { PricingRoute } from './routes/pricing'
+import { AuthModalProvider } from './contexts/AuthModalContext'
+import { MobileAuthDialog } from './components/auth/AuthModal'
+
+function RootLayout() {
+    return (
+        <>
+            <Outlet />
+            <MobileAuthDialog />
+        </>
+    )
+}
 
 function App() {
     const { isAuthenticated, isLoading } = useAuth()
@@ -19,60 +30,69 @@ function App() {
 
     const router = createBrowserRouter([
         {
-            path: "/",
-            element: (
-                <PublicRoute>
-                    <LandingPage />
-                </PublicRoute>
-            ),
-        },
-        {
-            path: "/pricing",
-            element: (
-                <PublicRoute>
-                    <PricingRoute />
-                </PublicRoute>
-            ),
-        },
-        {
-            path: "/login",
-            element: (
-                <PublicRoute>
-                    <LoginPage />
-                </PublicRoute>
-            ),
-        },
-        {
-            path: "/signup",
-            element: (
-                <PublicRoute>
-                    <SignupPage />
-                </PublicRoute>
-            ),
-        },
-        {
-            path: "/dashboard",
-            element: (
-                <ProtectedRoute>
-                    <DashboardPage />
-                </ProtectedRoute>
-            ),
-        },
-        {
-            path: "/profile",
-            element: (
-                <ProtectedRoute>
-                    <ProfilePage />
-                </ProtectedRoute>
-            ),
-        },
-        {
-            path: "*",
-            element: <Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />,
+            element: <RootLayout />,
+            children: [
+                {
+                    path: "/",
+                    element: (
+                        <PublicRoute>
+                            <LandingPage />
+                        </PublicRoute>
+                    ),
+                },
+                {
+                    path: "/pricing",
+                    element: (
+                        <PublicRoute>
+                            <PricingRoute />
+                        </PublicRoute>
+                    ),
+                },
+                {
+                    path: "/login",
+                    element: (
+                        <PublicRoute>
+                            <LoginPage />
+                        </PublicRoute>
+                    ),
+                },
+                {
+                    path: "/signup",
+                    element: (
+                        <PublicRoute>
+                            <SignupPage />
+                        </PublicRoute>
+                    ),
+                },
+                {
+                    path: "/dashboard",
+                    element: (
+                        <ProtectedRoute>
+                            <DashboardPage />
+                        </ProtectedRoute>
+                    ),
+                },
+                {
+                    path: "/profile",
+                    element: (
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
+                    ),
+                },
+                {
+                    path: "*",
+                    element: <Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />,
+                },
+            ],
         },
     ])
 
-    return <RouterProvider router={router} />
+    return (
+        <AuthModalProvider>
+            <RouterProvider router={router} />
+        </AuthModalProvider>
+    )
 }
 
 export default App

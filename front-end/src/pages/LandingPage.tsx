@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowRight, Shield, Zap, Smartphone, Code, Users, Star } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
+import { useAuthModal } from '@/contexts/AuthModalContext'
 
 export function LandingPage() {
+    const { openAuth } = useAuthModal()
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background pt-16 md:pt-20">
             <Header />
@@ -20,17 +22,22 @@ export function LandingPage() {
                         and beautiful UI components. Deploy immediately and customize with your content.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-                        <Link to="/signup">
-                            <Button size="lg" className="flex items-center gap-2 w-full sm:w-auto">
-                                Start Building
-                                <ArrowRight className="h-4 w-4" />
-                            </Button>
-                        </Link>
-                        <Link to="/login">
-                            <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                                View Demo
-                            </Button>
-                        </Link>
+                        <Button
+                            size="lg"
+                            className="flex items-center gap-2 w-full sm:w-auto"
+                            onClick={() => openAuth('signup')}
+                        >
+                            Start Building
+                            <ArrowRight className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            className="w-full sm:w-auto"
+                            onClick={() => openAuth('login')}
+                        >
+                            View Demo
+                        </Button>
                     </div>
                 </div>
             </section>
@@ -153,17 +160,22 @@ export function LandingPage() {
                         Get started with our production-ready template and launch your SaaS application faster than ever.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-                        <Link to="/signup">
-                            <Button size="lg" className="flex items-center gap-2 w-full sm:w-auto">
-                                Create Account
-                                <ArrowRight className="h-4 w-4" />
-                            </Button>
-                        </Link>
-                        <Link to="/login">
-                            <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                                Sign In
-                            </Button>
-                        </Link>
+                        <Button
+                            size="lg"
+                            className="flex items-center gap-2 w-full sm:w-auto"
+                            onClick={() => openAuth('signup')}
+                        >
+                            Create Account
+                            <ArrowRight className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            className="w-full sm:w-auto"
+                            onClick={() => openAuth('login')}
+                        >
+                            Sign In
+                        </Button>
                     </div>
                 </div>
             </section>
