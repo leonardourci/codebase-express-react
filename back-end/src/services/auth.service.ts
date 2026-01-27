@@ -1,4 +1,6 @@
 import bcrypt from 'bcrypt'
+import crypto from 'crypto'
+import { OAuth2Client } from 'google-auth-library'
 
 import { generateJwtToken, verifyJwtToken } from '../utils/jwt'
 import { CustomError } from '../utils/errors'
@@ -8,13 +10,81 @@ import { TRefreshTokenInput, IRefreshTokenResponse } from '../types/refreshToken
 import {
 	createUser,
 	getUserByEmail,
+	getUserByGoogleId,
 	getUserByRefreshToken,
 	updateUserById
 } from '../database/repositories/user.repository'
 import { removeUserSensitive } from './user.service'
 import { IUserProfile } from '../types/user'
+import globalConfig from '../utils/global-config'
 
 const { HASH_SALT } = process.env
+
+const client = new OAuth2Client(globalConfig.googleClientId)
+
+export interface IGoogleAuthInput {
+	credential: string
+}
+
+export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<ILoginResponse> {
+	const { credential } = input
+
+	let payload
+	try {
+		const ticket = await client.verifyIdToken({
+			idToken: credential,
+			audience: globalConfig.googleClientId
+		})
+		payload = ticket.getPayload()
+	} catch {
+		throw new CustomError('Invalid Google token', EStatusCodes.UNAUTHORIZED)
+	}
+
+	if (!payload || !payload.sub || !payload.email) {
+		throw new CustomError('Invalid Google token payload', EStatusCodes.UNAUTHORIZED)
+	}
+
+	const googleId = payload.sub
+	const email = payload.email
+	const fullName = payload.name || 'Google User'
+
+	let user = await getUserByGoogleId({ googleId })
+
+	if (!user) {
+		const existingUser = await getUserByEmail({ email })
+
+		if (existingUser) {
+			// Link Google account to existing user
+			user = await updateUserById({
+				id: existingUser.id,
+				updates: { googleId }
+			})
+		} else {
+			// Create new user with random password hash
+			const randomPassword = crypto.randomUUID()
+			const passwordHash = bcrypt.hashSync(randomPassword, Number(globalConfig.hashSalt))
+
+			user = await createUser({
+				email,
+				fullName,
+				phone: '',
+				age: 0,
+				passwordHash,
+				googleId
+			})
+		}
+	}
+
+	const accessToken = generateJwtToken({ userId: user.id })
+	const refreshToken = accessToken
+
+	await updateUserById({ id: user.id, updates: { refreshToken } })
+
+	return {
+		accessToken,
+		refreshToken
+	}
+}
 
 export async function authenticateUser(input: TLoginInput): Promise<ILoginResponse> {
 	const user = await getUserByEmail({ email: input.email })
