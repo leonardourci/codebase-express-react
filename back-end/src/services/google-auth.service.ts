@@ -23,7 +23,6 @@ export interface IGoogleAuthInput {
 export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<ILoginResponse> {
 	const { credential } = input
 
-	// Verify the Google token
 	let payload
 	try {
 		const ticket = await client.verifyIdToken({
@@ -43,11 +42,9 @@ export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<I
 	const email = payload.email
 	const fullName = payload.name || 'Google User'
 
-	// Check if user exists by Google ID
 	let user = await getUserByGoogleId({ googleId })
 
 	if (!user) {
-		// Check if user exists by email (for account linking)
 		const existingUser = await getUserByEmail({ email })
 
 		if (existingUser) {
@@ -72,7 +69,6 @@ export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<I
 		}
 	}
 
-	// Generate tokens
 	const accessToken = generateJwtToken({ userId: user.id })
 	const refreshToken = accessToken
 
