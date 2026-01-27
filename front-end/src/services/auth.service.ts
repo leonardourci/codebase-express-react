@@ -38,6 +38,26 @@ export class AuthService {
         }
     }
 
+    async googleLogin(credential: string): Promise<IAuthResponse> {
+        const response: ILoginResponse = await trpcClient.auth.google.mutate({ credential })
+
+        setTokens(response.accessToken, response.refreshToken)
+
+        const user = await trpcClient.user.getUserById.query()
+
+        if (!user) {
+            throw new Error('User not found')
+        }
+
+        setUser(user)
+
+        return {
+            user,
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken
+        }
+    }
+
     async signup(userData: TSignupInput): Promise<IAuthResponse> {
         await trpcClient.auth.signup.mutate(userData)
 
