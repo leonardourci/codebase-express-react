@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: hsl(var(--color-background));
+  --foreground: hsl(var(--color-foreground));
+  --primary: hsl(var(--color-primary));
+  --primary-foreground: hsl(var(--color-primary-foreground));
+  --secondary: hsl(var(--color-secondary));
+  --secondary-foreground: hsl(var(--color-secondary-foreground));
+  --muted: hsl(var(--color-muted));
+  --muted-foreground: hsl(var(--color-muted-foreground));
+  --accent: hsl(var(--color-accent));
+  --accent-foreground: hsl(var(--color-accent-foreground));
+  --destructive: hsl(var(--color-destructive));
+  --destructive-foreground: hsl(var(--color-destructive-foreground));
+  --border: hsl(var(--color-border));
+  --input: hsl(var(--color-input));
+  --ring: hsl(var(--color-ring));
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

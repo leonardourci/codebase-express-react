@@ -308,7 +308,7 @@ export function DesktopAuthPopover({ signInButtonRef, signUpButtonRef }: Desktop
     <Popover open={isOpen} onOpenChange={(open) => !open && closeAuth()}>
       <PopoverAnchor virtualRef={anchorRef as React.RefObject<HTMLButtonElement>} />
       <PopoverContent
-        className="w-80 p-4 bg-white border border-border shadow-lg"
+        className="w-80 p-4 bg-background border border-border shadow-lg"
         align="end"
         sideOffset={8}
         data-slot="auth-popover"
