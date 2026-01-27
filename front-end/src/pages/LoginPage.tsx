@@ -9,6 +9,8 @@ import { useFormValidation } from '@/hooks/useFormValidation'
 import { TLoginInput } from '@/types/auth'
 import { loginSchema } from '@/validations/auth.schemas'
 import { Header } from '@/components/layout/Header'
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton'
+import { AuthDivider } from '@/components/auth/AuthDivider'
 
 export function LoginPage() {
     const { login, isLoading } = useAuth()
@@ -50,6 +52,9 @@ export function LoginPage() {
                                     {errors.general}
                                 </div>
                             )}
+
+                            <GoogleAuthButton />
+                            <AuthDivider />
 
                             <div className="space-y-2">
                                 <Label htmlFor="email" className="text-base font-medium">
