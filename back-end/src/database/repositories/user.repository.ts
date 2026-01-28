@@ -22,7 +22,8 @@ export const getUserByEmail = async (input: { email: string }): Promise<IUserInf
 	return {
 		id: row[EUserDbRowKeys.id],
 		passwordHash: row[EUserDbRowKeys.passwordHash],
-		googleId: row[EUserDbRowKeys.googleId]
+		googleId: row[EUserDbRowKeys.googleId],
+		emailVerified: row[EUserDbRowKeys.emailVerified]
 	}
 }
 
@@ -52,9 +53,19 @@ export const getUserByRefreshToken = async ({ refreshToken }: { refreshToken: st
 	return keysToCamelCase<IUserDbRow, IUser>(row)
 }
 
+export const getUserByEmailVerificationToken = async ({ token }: { token: string }): Promise<IUser | null> => {
+	const [row] = await knex(USERS_TABLE)
+		.where({ email_verification_token: token })
+		.select()
+
+	if (!row) return null
+
+	return keysToCamelCase<IUserDbRow, IUser>(row)
+}
+
 export const updateUserById = async ({ id: userId, updates }: {
 	id: string,
-	updates: Partial<Pick<IUser, 'email' | 'fullName' | 'phone' | 'age' | 'passwordHash' | 'refreshToken' | 'googleId'>>
+	updates: Partial<Pick<IUser, 'email' | 'fullName' | 'phone' | 'age' | 'passwordHash' | 'refreshToken' | 'googleId' | 'emailVerified' | 'emailVerificationToken'>>
 }
 ): Promise<IUser> => {
 	const updateData = keysToSnakeCase<typeof updates & { updatedAt: Date }, Partial<IUserDbRow>>({

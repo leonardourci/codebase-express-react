@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { cn } from '@/lib/utils'
 import { trpc } from '@/lib/trpc'
-import { getAccessToken } from '@/utils/auth'
 import {
     Home,
     User,
@@ -27,23 +26,17 @@ export function Sidebar({ isOpen = true, onClose, className }: SidebarProps) {
     const location = useLocation()
     const [isLoadingPortal, setIsLoadingPortal] = useState(false)
     const [portalError, setPortalError] = useState<string | null>(null)
+    const [showVerificationError, setShowVerificationError] = useState(false)
 
     const createPortalSession = trpc.billing.createCustomerPortalSession.useMutation()
+    const resendMutation = trpc.auth.resendVerificationEmail.useMutation()
 
     const handleManageSubscription = async () => {
         setIsLoadingPortal(true)
         setPortalError(null)
 
         try {
-            const token = getAccessToken()
-            if (!token) {
-                setPortalError('Authentication required')
-                setIsLoadingPortal(false)
-                return
-            }
-
             const result = await createPortalSession.mutateAsync({
-                token,
                 returnUrl: `${window.location.origin}/dashboard`
             })
 
@@ -55,7 +48,14 @@ export function Sidebar({ isOpen = true, onClose, className }: SidebarProps) {
             }
         } catch (error: any) {
             const errorMessage = error?.message || 'Failed to access billing portal'
-            setPortalError(errorMessage)
+
+            // Check if error is due to email verification
+            if (error?.data?.httpStatus === 403 && errorMessage.includes('verify your email')) {
+                setShowVerificationError(true)
+            } else {
+                setPortalError(errorMessage)
+            }
+
             setIsLoadingPortal(false)
         }
     }
@@ -151,6 +151,38 @@ export function Sidebar({ isOpen = true, onClose, className }: SidebarProps) {
                     </div>
                 </div>
             </aside>
+
+            {showVerificationError && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md">
+                        <h3 className="text-lg font-semibold mb-2">Email Verification Required</h3>
+                        <p className="text-gray-600 mb-4">
+                            Please verify your email address before making a purchase.
+                        </p>
+                        <div className="flex gap-3">
+                            <Button
+                                onClick={() => {
+                                    resendMutation.mutate(undefined, {
+                                        onSuccess: () => {
+                                            alert('Verification email sent! Please check your inbox.')
+                                            setShowVerificationError(false)
+                                        }
+                                    })
+                                }}
+                                disabled={resendMutation.isPending}
+                            >
+                                {resendMutation.isPending ? 'Sending...' : 'Resend Verification Email'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowVerificationError(false)}
+                            >
+                                Close
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     )
 }

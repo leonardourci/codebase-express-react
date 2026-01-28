@@ -209,7 +209,7 @@ describe('Auth Service', () => {
 
             mockUserRepository.updateUserById.mockResolvedValue(undefined)
 
-            await revokeUserRefreshToken(userId)
+            await revokeUserRefreshToken({ userId })
 
             expect(mockUserRepository.updateUserById).toHaveBeenCalledWith({
                 id: userId,
@@ -223,7 +223,7 @@ describe('Auth Service', () => {
 
             mockUserRepository.updateUserById.mockRejectedValue(repositoryError)
 
-            await expect(revokeUserRefreshToken(userId)).rejects.toThrow(repositoryError)
+            await expect(revokeUserRefreshToken({ userId })).rejects.toThrow(repositoryError)
 
             expect(mockUserRepository.updateUserById).toHaveBeenCalledWith({
                 id: userId,

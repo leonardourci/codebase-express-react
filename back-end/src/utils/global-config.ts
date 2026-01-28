@@ -22,5 +22,8 @@ export default {
 	jwtSecret: data.JWT_SECRET,
 	stripeSecretKey: data.STRIPE_SECRET_KEY,
 	allowedOrigins: (data.ALLOWED_ORIGINS || DEFAULT_FRONTEND_LOCALHOST).split(',').map(origin => origin.trim()),
-	googleClientId: data.GOOGLE_CLIENT_ID
+	googleClientId: data.GOOGLE_CLIENT_ID,
+	resendApiKey: data.RESEND_API_KEY,
+	resendFromEmail: data.RESEND_FROM_EMAIL,
+	appUrl: data.APP_URL
 } as const

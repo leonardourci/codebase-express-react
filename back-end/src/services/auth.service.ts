@@ -2,9 +2,10 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
 
-import { generateJwtToken, verifyJwtToken } from '../utils/jwt'
+import { generateJwtToken, verifyJwtToken, verifyJwtTokenSimple } from '../utils/jwt'
 import { CustomError } from '../utils/errors'
 import { EStatusCodes } from '../utils/status-codes'
+import { sendVerificationEmail } from './email.service'
 import { TLoginInput, ILoginResponse, TSignupInput } from '../types/auth'
 import { TRefreshTokenInput, IRefreshTokenResponse } from '../types/refreshToken'
 import {
@@ -12,7 +13,8 @@ import {
 	getUserByEmail,
 	getUserByGoogleId,
 	getUserByRefreshToken,
-	updateUserById
+	updateUserById,
+	getUserById
 } from '../database/repositories/user.repository'
 import { removeUserSensitive } from './user.service'
 import { IUser, IUserProfile } from '../types/user'
@@ -62,7 +64,7 @@ export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<I
 			// Link Google account to existing user
 			user = await updateUserById({
 				id: existingUser.id,
-				updates: { googleId }
+				updates: { googleId, emailVerified: true }
 			})
 		} else {
 			// Create new user with random password hash
@@ -75,7 +77,10 @@ export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<I
 				phone: '',
 				age: 0,
 				passwordHash,
-				googleId
+				googleId,
+
+				// If the user is loggin in with Google, we assume that the email is correct.
+				emailVerified: true
 			})
 		}
 	}
@@ -112,7 +117,32 @@ export async function authenticateUser(input: TLoginInput): Promise<ILoginRespon
 export async function registerUser({ password, ...input }: TSignupInput): Promise<IUserProfile> {
 	const passwordHash = bcrypt.hashSync(password, Number(HASH_SALT) ?? '')
 
-	const user = await createUser({ ...input, passwordHash })
+	const user = await createUser({
+		...input,
+		passwordHash,
+		emailVerified: false
+	})
+
+	const verificationToken = generateJwtToken(
+		{ userId: user.id, purpose: 'email-verification' },
+		{ expiresIn: '30m' }
+	)
+
+	await updateUserById({
+		id: user.id,
+		updates: { emailVerificationToken: verificationToken }
+	})
+
+	try {
+		await sendVerificationEmail({
+			to: user.email,
+			fullName: user.fullName,
+			verificationToken
+		})
+	} catch (error) {
+		console.error('Failed to send verification email:', error)
+		// Continue - because user can resend later
+	}
 
 	return removeUserSensitive({ user })
 }
@@ -136,6 +166,68 @@ export async function refreshAccessToken(input: TRefreshTokenInput): Promise<IRe
 	}
 }
 
-export async function revokeUserRefreshToken(userId: string): Promise<void> {
+export async function revokeUserRefreshToken({ userId }: { userId: string }): Promise<void> {
 	await updateUserById({ id: userId, updates: { refreshToken: undefined } })
+}
+
+export async function verifyUserEmail({ token }: { token: string }): Promise<void> {
+	// Verify and decode token
+	const decoded = verifyJwtTokenSimple({ token })
+
+	if (decoded.purpose !== 'email-verification') {
+		throw new CustomError('Invalid verification token', EStatusCodes.BAD_REQUEST)
+	}
+
+	const user = await getUserById({ id: decoded.userId })
+
+	if (!user) {
+		throw new CustomError('Invalid verification token', EStatusCodes.BAD_REQUEST)
+	}
+
+	// Verify token matches what's stored (prevent token reuse after resend)
+	if (user.emailVerificationToken !== token) {
+		throw new CustomError('Invalid or expired verification token', EStatusCodes.BAD_REQUEST)
+	}
+
+	// Check if already verified
+	if (user.emailVerified) {
+		return // Already verified, return success
+	}
+
+	// Mark as verified
+	await updateUserById({
+		id: user.id,
+		updates: {
+			emailVerified: true,
+			emailVerificationToken: undefined
+		}
+	})
+}
+
+export async function resendVerificationEmail({ userId }: { userId: string }): Promise<void> {
+	const user = await getUserById({ id: userId })
+
+	if (!user) {
+		throw new CustomError('User not found', EStatusCodes.NOT_FOUND)
+	}
+
+	if (user.emailVerified) {
+		throw new CustomError('Email already verified', EStatusCodes.BAD_REQUEST)
+	}
+
+	const verificationToken = generateJwtToken(
+		{ userId: user.id, purpose: 'email-verification' },
+		{ expiresIn: '30m' }
+	)
+
+	await updateUserById({
+		id: user.id,
+		updates: { emailVerificationToken: verificationToken }
+	})
+
+	await sendVerificationEmail({
+		to: user.email,
+		fullName: user.fullName,
+		verificationToken
+	})
 }

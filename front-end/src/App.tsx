@@ -4,6 +4,7 @@ import { LoginPage } from './pages/LoginPage'
 import { SignupPage } from './pages/SignupPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { ProtectedRoute } from './components/routes/ProtectedRoute'
 import { PublicRoute } from './components/routes/PublicRoute'
 import { LoadingSpinner } from './components/ui/loading-spinner'
@@ -63,6 +64,10 @@ function App() {
                             <SignupPage />
                         </PublicRoute>
                     ),
+                },
+                {
+                    path: "/verify-email",
+                    element: <VerifyEmailPage />,
                 },
                 {
                     path: "/dashboard",

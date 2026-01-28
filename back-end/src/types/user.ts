@@ -11,9 +11,11 @@ export interface IUser extends IBaseModel {
   passwordHash: string
   refreshToken?: string
   googleId?: string
+  emailVerified: boolean
+  emailVerificationToken?: string
 }
 
-export interface IUserProfile extends Pick<IUser, 'id' | 'age' | 'email' | 'fullName' | 'phone'> { }
+export interface IUserProfile extends Pick<IUser, 'id' | 'age' | 'email' | 'fullName' | 'phone' | 'emailVerified'> { }
 
 export interface ICreateUserInput {
   fullName: string
@@ -22,6 +24,8 @@ export interface ICreateUserInput {
   age: number
   phone: string
   googleId?: string
+  emailVerified?: boolean
+  emailVerificationToken?: string
 }
 
 export enum EUserDbRowKeys {
@@ -33,6 +37,8 @@ export enum EUserDbRowKeys {
   passwordHash = 'password_hash',
   refreshToken = 'refresh_token',
   googleId = 'google_id',
+  emailVerified = 'email_verified',
+  emailVerificationToken = 'email_verification_token',
   createdAt = 'created_at',
   updatedAt = 'updated_at'
 }
@@ -46,6 +52,8 @@ export interface IUserDbRow {
   password_hash?: string
   refresh_token?: string
   google_id?: string
+  email_verified?: boolean
+  email_verification_token?: string
   created_at?: Date
   updated_at?: Date | null
 }
@@ -54,6 +62,7 @@ export interface IUserInfoByEmailResponse {
   id: string
   passwordHash: string
   googleId?: string
+  emailVerified: boolean
 }
 
 export type TUpdateUserInput = z.infer<typeof updateUserSchema>

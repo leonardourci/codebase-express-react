@@ -6,6 +6,7 @@ export interface IUser {
     age: number
     passwordHash: string
     refreshToken?: string
+    emailVerified: boolean
     createdAt: Date
     updatedAt?: Date | null
 }
@@ -16,6 +17,7 @@ export interface IUserProfile {
     fullName: string
     age: number
     phone: string
+    emailVerified: boolean
 }
 
 export interface TUpdateUserInput {

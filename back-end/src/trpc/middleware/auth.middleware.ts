@@ -96,3 +96,25 @@ export const billingMiddleware = middleware(async ({ ctx, next }) => {
 })
 
 export const billingProtectedProcedure = procedure.use(authMiddleware).use(billingMiddleware)
+
+export const verifiedEmailMiddleware = middleware(async ({ ctx, next }) => {
+    // Ensure user is authenticated first
+    if (!ctx.user) {
+        throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Authentication required'
+        })
+    }
+
+    if (!ctx.user.emailVerified) {
+        throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Please verify your email before making a purchase'
+        })
+    }
+
+    return next()
+})
+
+// Protected procedure that requires authentication and verified email
+export const verifiedEmailProcedure = procedure.use(authMiddleware).use(verifiedEmailMiddleware)

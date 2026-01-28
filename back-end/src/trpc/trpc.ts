@@ -1,8 +1,11 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import { Request, Response } from 'express'
+
 import { IUser } from '../types/user'
 import { CustomError, ZodValidationError } from '../utils/errors'
 import { EStatusCodes } from '../utils/status-codes'
+import globalConfig from '../utils/global-config'
+import { ENodeEnvs } from '../types/envs'
 
 type TRPCErrorCode =
   | 'BAD_REQUEST'
@@ -65,7 +68,7 @@ export const transformErrorToTRPC = (error: unknown): TRPCError => {
 
   return new TRPCError({
     code: 'INTERNAL_SERVER_ERROR',
-    message: 'An unexpected error occurred'
+    message: (error as any)?.message || 'Internal server error'
   })
 }
 export interface ITRPCContext {
@@ -85,20 +88,32 @@ export const createTRPCContext = (opts: { req: Request; res: Response }): ITRPCC
 // Initialize tRPC instance
 const t = initTRPC.context<ITRPCContext>().create({
   errorFormatter({ shape, error }) {
-    const isProduction = process.env.NODE_ENV === 'production'
+    const isProduction = globalConfig.nodeEnv === ENodeEnvs.PRODUCTION
 
     // In production, remove sensitive data like stack traces and internal paths
     // In development, keep full error details for debugging
     if (isProduction) {
+    console.log('isproduciton')
+
+      // Sanitize error message for production - hide database/internal details
+      const sanitizedMessage = shape.message.includes('column') ||
+                               shape.message.includes('table') ||
+                               shape.message.includes('database')
+        ? 'An internal error occurred. Please try again later.'
+        : shape.message
+
       return {
         ...shape,
+        message: sanitizedMessage,
         data: {
           code: shape.data.code,
-          httpStatus: shape.data.httpStatus
+          httpStatus: shape.data.httpStatus,
+          path: shape.data.path
         }
       }
     }
 
+    // Development: include full error details for debugging
     return {
       ...shape,
       data: {

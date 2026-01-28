@@ -7,7 +7,7 @@ import { IUser } from '../types/user'
 import { TValidateTokenInput, IToken } from '../types/jwt'
 import { validateTokenSchema } from './validations/jwt.schemas'
 
-export const generateJwtToken = (input: { userId: IUser['id'] }, options?: jwt.SignOptions) => {
+export const generateJwtToken = (input: { userId: IUser['id']; purpose?: string }, options?: jwt.SignOptions) => {
 	return jwt.sign(input, globalConfig.jwtSecret, options)
 }
 
@@ -33,4 +33,13 @@ export const decodeJwtToken = (input: TValidateTokenInput): IToken => {
 	const token = data.token.split('Bearer ')[1] as string
 
 	return jwt.decode(token) as IToken
+}
+
+export const verifyJwtTokenSimple = ({ token }: { token: string }): { userId: string; purpose?: string } => {
+	try {
+		const decoded = jwt.verify(token, globalConfig.jwtSecret) as { userId: string; purpose?: string }
+		return decoded
+	} catch (err) {
+		throw new CustomError(`Invalid or expired token: ${err}`, EStatusCodes.UNAUTHORIZED)
+	}
 }

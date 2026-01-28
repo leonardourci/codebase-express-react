@@ -10,6 +10,8 @@ export async function up(knex: Knex): Promise<void> {
         table.string('password_hash').notNullable()
         table.string('google_id').nullable().unique()
         table.text('refresh_token').nullable()
+        table.boolean('email_verified').notNullable().defaultTo(false)
+        table.text('email_verification_token').nullable()
         table.timestamps(true, true)
     })
 }

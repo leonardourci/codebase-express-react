@@ -12,11 +12,13 @@ import type { IUserProfile, TUpdateUserInput } from '@/types/user'
 import { User, Save } from 'lucide-react'
 import { updateUserSchema } from '@/validations/user.schemas'
 import { maskEmail, maskPhone } from '@/utils/format'
+import { trpc } from '@/lib/trpc'
 
 export function ProfilePage() {
     const { isLoading, error, getProfile, updateProfile } = useUser()
     const [profile, setProfile] = useState<IUserProfile | null>(null)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
+    const resendMutation = trpc.auth.resendVerificationEmail.useMutation()
 
     const {
         formData,
@@ -114,6 +116,44 @@ export function ProfilePage() {
                     <h1 className="text-3xl md:text-4xl font-bold">Profile Settings</h1>
                     <p className="text-muted-foreground text-base md:text-lg mt-1">Manage your account information and preferences</p>
                 </div>
+
+                {!profile?.emailVerified && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-medium text-yellow-800">
+                                    Email not verified
+                                </h3>
+                                <p className="text-sm text-yellow-700 mt-1">
+                                    Please verify your email to unlock all features
+                                </p>
+                            </div>
+                            <Button
+                                onClick={() => {
+                                    resendMutation.mutate(undefined, {
+                                        onSuccess: () => {
+                                            alert('Verification email sent!')
+                                        },
+                                        onError: (error) => {
+                                            alert(error.message)
+                                        }
+                                    })
+                                }}
+                                disabled={resendMutation.isPending}
+                                size="sm"
+                            >
+                                {resendMutation.isPending ? 'Sending...' : 'Resend Email'}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                {profile?.emailVerified && (
+                    <div className="flex items-center gap-2 text-green-600 text-sm mb-4">
+                        <span>✓</span>
+                        <span>Email verified</span>
+                    </div>
+                )}
 
                 <Card>
                             <CardHeader>

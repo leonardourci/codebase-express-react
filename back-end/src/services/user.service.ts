@@ -6,7 +6,8 @@ export const removeUserSensitive = ({ user }: { user: IUser }): IUserProfile => 
     email: user.email,
     fullName: user.fullName,
     age: user.age,
-    phone: user.phone
+    phone: user.phone,
+    emailVerified: user.emailVerified,
 })
 
 export async function getUserProfile({ userId }: { userId: IUser['id'] }): Promise<IUserProfile | null> {

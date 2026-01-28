@@ -1,4 +1,4 @@
-import { getUserByEmail } from '../database/repositories/user.repository'
+import { getUserByEmail, getUserById } from '../database/repositories/user.repository'
 import {
 	createBilling,
 	getBillingByUserId as getBillingByUserId,
@@ -6,6 +6,23 @@ import {
 	getBillingByExternalSubscriptionId,
 	updateBillingById
 } from '../database/repositories/billing.repository'
+import { CustomError } from '../utils/errors'
+import { EStatusCodes } from '../utils/status-codes'
+
+async function hasUserVerifiedEmail({ userId }: { userId: string }): Promise<void> {
+	const user = await getUserById({ id: userId })
+
+	if (!user) {
+		throw new CustomError('User not found', EStatusCodes.UNAUTHORIZED)
+	}
+
+	if (!user.emailVerified) {
+		throw new CustomError(
+			'Please verify your email before making a purchase',
+			EStatusCodes.FORBIDDEN
+		)
+	}
+}
 
 export interface IUpdateUserBillingInput {
 	userEmail: string
@@ -21,6 +38,8 @@ export const registerUserBilling = async (input: IUpdateUserBillingInput) => {
 	if (!user) {
 		throw new Error(`User with email "${input.userEmail}" not found`)
 	}
+
+	await hasUserVerifiedEmail({ userId: user.id })
 
 	const billing = await getBillingByUserId({ userId: user.id })
 	if (!billing) {

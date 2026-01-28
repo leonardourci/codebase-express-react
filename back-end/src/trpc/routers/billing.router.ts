@@ -1,14 +1,13 @@
 import { TRPCError } from '@trpc/server'
 import { router } from '../trpc'
-import { protectedProcedure } from '../middleware/auth.middleware'
+import { verifiedEmailProcedure } from '../middleware/auth.middleware'
 import { createCheckoutSessionSchema, createPortalSessionSchema } from '../../utils/validations/billing.schemas'
 import { getProductById } from '../../database/repositories/product.repository'
 import { getBillingByUserId } from '../../database/repositories/billing.repository'
-import { decodeJwtToken } from '../../utils/jwt'
 import stripe from '../../utils/stripe'
 
 export const billingRouter = router({
-    createCheckoutSession: protectedProcedure
+    createCheckoutSession: verifiedEmailProcedure
         .input(createCheckoutSessionSchema)
         .mutation(async ({ input }) => {
             const product = await getProductById({ id: input.productId })
@@ -38,11 +37,10 @@ export const billingRouter = router({
             return { id: session.id, url: session.url }
         }),
 
-    createCustomerPortalSession: protectedProcedure
+    createCustomerPortalSession: verifiedEmailProcedure
         .input(createPortalSessionSchema)
-        .mutation(async ({ input }) => {
-            const { userId } = decodeJwtToken({ token: input.token })
-            const billing = await getBillingByUserId({ userId })
+        .mutation(async ({ input, ctx }) => {
+            const billing = await getBillingByUserId({ userId: ctx.user!.id })
 
             if (!billing) {
                 throw new TRPCError({
