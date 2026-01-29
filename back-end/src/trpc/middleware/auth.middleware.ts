@@ -4,18 +4,22 @@ import { verifyJwtToken, decodeJwtToken } from '../../utils/jwt'
 import { getUserById } from '../../database/repositories/user.repository'
 import { getBillingByUserId } from '../../database/repositories/billing.repository'
 
+const TOKEN_PREFIX = 'Bearer '
+
 /**
  * tRPC middleware that verifies JWT token and adds user to context
  */
 export const authMiddleware = middleware(async ({ ctx, next }) => {
-    const token = ctx.req.headers['authorization']
+    const authHeader = ctx.req.headers['authorization']
 
-    if (!token) {
+    if (!authHeader) {
         throw new TRPCError({
             code: 'UNAUTHORIZED',
             message: 'No authorization token provided'
         })
     }
+
+    const token = authHeader.startsWith(TOKEN_PREFIX) ? authHeader.slice(TOKEN_PREFIX.length) : authHeader
 
     try {
         verifyJwtToken({ token })

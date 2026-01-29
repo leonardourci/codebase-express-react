@@ -18,13 +18,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
             const hasValidAccess = hasValidAccessToken()
             const hasRefresh = hasRefreshToken()
 
-            if (!hasValidAccess && hasRefresh && !isAuthenticated && !isLoading) {
+            // If access token is expired but we have a refresh token, attempt to refresh
+            if (!hasValidAccess && hasRefresh && !isLoading && !isRefreshing) {
                 setIsRefreshing(true)
                 try {
                     await refreshTokens()
                 } catch (error) {
                     // Refresh failed - refresh token might be expired or invalid
-                    // User will be redirected to login
+                    // Auth state will be updated via AUTH_STATE_CHANGE_EVENT and user will be redirected
                     console.warn('Token refresh failed:', error)
                 } finally {
                     setIsRefreshing(false)
@@ -33,7 +34,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         }
 
         attemptTokenRefresh()
-    }, [isAuthenticated, isLoading, refreshTokens])
+    }, [isLoading, refreshTokens, isRefreshing])
 
     if (isLoading || isRefreshing) {
         return (

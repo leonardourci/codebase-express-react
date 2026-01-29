@@ -17,9 +17,7 @@ export const verifyJwtToken = (input: TValidateTokenInput): void => {
 	if (error) throw new ZodValidationError(error)
 
 	try {
-		const token = data!.token.split('Bearer ')[1]
-
-		jwt.verify(token!, globalConfig.jwtSecret)
+		jwt.verify(data.token, globalConfig.jwtSecret)
 	} catch (err) {
 		throw new CustomError(`TOKEN_ERROR: ${err}`, EStatusCodes.UNAUTHORIZED)
 	}
@@ -30,9 +28,7 @@ export const decodeJwtToken = (input: TValidateTokenInput): IToken => {
 
 	if (error) throw new ZodValidationError(error)
 
-	const token = data.token.split('Bearer ')[1] as string
-
-	return jwt.decode(token) as IToken
+	return jwt.decode(data.token) as IToken
 }
 
 export const verifyJwtTokenSimple = ({ token }: { token: string }): { userId: string; purpose?: ETokenPurpose } => {

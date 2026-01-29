@@ -40,10 +40,15 @@ export const setTokens = (accessToken: string, refreshToken: string): void => {
     setRefreshToken(refreshToken)
 }
 
+export const AUTH_STATE_CHANGE_EVENT = 'auth-state-change'
+
 export const clearAuthData = (): void => {
     localStorage.removeItem(ACCESS_TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
+
+    // Dispatch event so React components can react to auth state changes
+    window.dispatchEvent(new CustomEvent(AUTH_STATE_CHANGE_EVENT, { detail: { authenticated: false } }))
 }
 
 export const isTokenExpired = (token: string): boolean => {

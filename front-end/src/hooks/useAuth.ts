@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { authService, type IAuthResponse } from '../services/auth.service'
-import { getUser, isAuthenticated } from '../utils/auth'
+import { getUser, isAuthenticated, AUTH_STATE_CHANGE_EVENT } from '../utils/auth'
 import { IUserProfile } from '@/types'
 import { TLoginInput, TSignupInput } from '@/validations'
 
@@ -33,6 +33,24 @@ export function useAuth() {
         }
 
         initializeAuth()
+
+        // Listen for auth state changes (e.g., when tokens are cleared from trpc.ts)
+        const handleAuthStateChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ authenticated: boolean }>
+            if (!customEvent.detail.authenticated) {
+                setAuthState({
+                    user: null,
+                    isAuthenticated: false,
+                    isLoading: false,
+                    error: 'Session expired',
+                })
+            }
+        }
+
+        window.addEventListener(AUTH_STATE_CHANGE_EVENT, handleAuthStateChange)
+        return () => {
+            window.removeEventListener(AUTH_STATE_CHANGE_EVENT, handleAuthStateChange)
+        }
     }, [])
 
     const login = async (credentials: TLoginInput): Promise<IAuthResponse> => {
