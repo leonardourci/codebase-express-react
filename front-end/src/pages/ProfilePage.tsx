@@ -44,8 +44,8 @@ export function ProfilePage() {
                 setProfile(userProfile)
                 setFormData({
                     fullName: userProfile.fullName,
-                    email: userProfile.email,
-                    phone: userProfile.phone,
+                    email: maskEmail(userProfile.email),
+                    phone: maskPhone(userProfile.phone),
                     age: userProfile.age
                 })
             } catch (err) {
@@ -204,7 +204,7 @@ export function ProfilePage() {
                                                 id="email"
                                                 type="email"
                                                 placeholder="Enter your email"
-                                                value={maskEmail(formData.email || '')}
+                                                value={formData.email || ''}
                                                 onChange={(e) => handleFormInputChange('email', e.target.value)}
                                                 className={errors.email ? 'border-destructive' : ''}
                                             />
@@ -221,7 +221,7 @@ export function ProfilePage() {
                                                 id="phone"
                                                 type="tel"
                                                 placeholder="Enter your phone number"
-                                                value={maskPhone(formData.phone || '')}
+                                                value={formData.phone || ''}
                                                 onChange={(e) => handleFormInputChange('phone', e.target.value)}
                                                 className={errors.phone ? 'border-destructive' : ''}
                                             />

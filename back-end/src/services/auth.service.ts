@@ -5,9 +5,10 @@ import { OAuth2Client } from 'google-auth-library'
 import { generateJwtToken, verifyJwtToken, verifyJwtTokenSimple } from '../utils/jwt'
 import { CustomError } from '../utils/errors'
 import { EStatusCodes } from '../utils/status-codes'
-import { sendVerificationEmail } from './email.service'
+import { sendVerificationEmail, sendPasswordResetEmail } from './email.service'
 import { TLoginInput, ILoginResponse, TSignupInput } from '../types/auth'
 import { TRefreshTokenInput, IRefreshTokenResponse } from '../types/refreshToken'
+import { ETokenPurpose } from '../types/jwt'
 import {
 	createUser,
 	getUserByEmail,
@@ -124,7 +125,7 @@ export async function registerUser({ password, ...input }: TSignupInput): Promis
 	})
 
 	const verificationToken = generateJwtToken(
-		{ userId: user.id, purpose: 'email-verification' },
+		{ userId: user.id, purpose: ETokenPurpose.EMAIL_VERIFICATION },
 		{ expiresIn: '30m' }
 	)
 
@@ -174,7 +175,7 @@ export async function verifyUserEmail({ token }: { token: string }): Promise<voi
 	// Verify and decode token
 	const decoded = verifyJwtTokenSimple({ token })
 
-	if (decoded.purpose !== 'email-verification') {
+	if (decoded.purpose !== ETokenPurpose.EMAIL_VERIFICATION) {
 		throw new CustomError('Invalid verification token', EStatusCodes.BAD_REQUEST)
 	}
 
@@ -216,7 +217,7 @@ export async function resendVerificationEmail({ userId }: { userId: string }): P
 	}
 
 	const verificationToken = generateJwtToken(
-		{ userId: user.id, purpose: 'email-verification' },
+		{ userId: user.id, purpose: ETokenPurpose.EMAIL_VERIFICATION },
 		{ expiresIn: '30m' }
 	)
 
@@ -229,5 +230,50 @@ export async function resendVerificationEmail({ userId }: { userId: string }): P
 		to: user.email,
 		fullName: user.fullName,
 		verificationToken
+	})
+}
+
+export async function forgotPassword({ email }: { email: string }): Promise<void> {
+	const user = await getUserByEmail({ email })
+
+	// Don't reveal if user exists - always return success
+	if (!user) {
+		return
+	}
+
+	const resetToken = generateJwtToken(
+		{ userId: user.id, purpose: ETokenPurpose.PASSWORD_RESET },
+		{ expiresIn: '15m' }
+	)
+
+	await sendPasswordResetEmail({
+		to: user.email,
+		fullName: user.fullName,
+		resetToken
+	})
+}
+
+export async function resetPassword({ token, newPassword }: { token: string; newPassword: string }): Promise<void> {
+	const decoded = verifyJwtTokenSimple({ token })
+
+	if (decoded.purpose !== ETokenPurpose.PASSWORD_RESET) {
+		throw new CustomError('Invalid reset token', EStatusCodes.BAD_REQUEST)
+	}
+
+	const user = await getUserById({ id: decoded.userId })
+
+	if (!user) {
+		throw new CustomError('Invalid reset token', EStatusCodes.BAD_REQUEST)
+	}
+
+	const passwordHash = bcrypt.hashSync(newPassword, Number(globalConfig.hashSalt))
+
+	// Update password and invalidate all refresh tokens (force re-login)
+	await updateUserById({
+		id: user.id,
+		updates: {
+			passwordHash,
+			refreshToken: undefined
+		}
 	})
 }

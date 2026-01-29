@@ -4,10 +4,10 @@ import { CustomError, ZodValidationError } from './errors'
 import { EStatusCodes } from './status-codes'
 import globalConfig from './global-config'
 import { IUser } from '../types/user'
-import { TValidateTokenInput, IToken } from '../types/jwt'
+import { TValidateTokenInput, IToken, ETokenPurpose } from '../types/jwt'
 import { validateTokenSchema } from './validations/jwt.schemas'
 
-export const generateJwtToken = (input: { userId: IUser['id']; purpose?: string }, options?: jwt.SignOptions) => {
+export const generateJwtToken = (input: { userId: IUser['id']; purpose?: ETokenPurpose }, options?: jwt.SignOptions) => {
 	return jwt.sign(input, globalConfig.jwtSecret, options)
 }
 
@@ -35,9 +35,9 @@ export const decodeJwtToken = (input: TValidateTokenInput): IToken => {
 	return jwt.decode(token) as IToken
 }
 
-export const verifyJwtTokenSimple = ({ token }: { token: string }): { userId: string; purpose?: string } => {
+export const verifyJwtTokenSimple = ({ token }: { token: string }): { userId: string; purpose?: ETokenPurpose } => {
 	try {
-		const decoded = jwt.verify(token, globalConfig.jwtSecret) as { userId: string; purpose?: string }
+		const decoded = jwt.verify(token, globalConfig.jwtSecret) as { userId: string; purpose?: ETokenPurpose }
 		return decoded
 	} catch (err) {
 		throw new CustomError(`Invalid or expired token: ${err}`, EStatusCodes.UNAUTHORIZED)

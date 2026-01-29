@@ -60,6 +60,8 @@ export interface IUserDbRow {
 
 export interface IUserInfoByEmailResponse {
   id: string
+  email: string
+  fullName: string
   passwordHash: string
   googleId?: string
   emailVerified: boolean

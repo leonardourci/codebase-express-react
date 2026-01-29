@@ -21,6 +21,8 @@ export const getUserByEmail = async (input: { email: string }): Promise<IUserInf
 
 	return {
 		id: row[EUserDbRowKeys.id],
+		email: row[EUserDbRowKeys.email],
+		fullName: row[EUserDbRowKeys.fullName],
 		passwordHash: row[EUserDbRowKeys.passwordHash],
 		googleId: row[EUserDbRowKeys.googleId],
 		emailVerified: row[EUserDbRowKeys.emailVerified]
