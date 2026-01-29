@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthModal } from '@/contexts/AuthModalContext'
 import { AuthButtons } from '@/components/auth/AuthModal'
@@ -58,6 +59,8 @@ export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
                     </div>
 
                     <nav className="hidden md:flex items-center space-x-2">
+                        <ThemeToggle />
+
                         {!isAuthenticated && (
                             <Link to="/pricing">
                                 <Button variant="ghost" size="sm">
@@ -87,19 +90,21 @@ export function Header({ onMenuToggle, showMenuButton = false }: HeaderProps) {
                         )}
                     </nav>
 
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleMobileMenu}
-                        className="md:hidden"
-                        aria-label="Toggle mobile menu"
-                    >
-                        {isMobileMenuOpen ? (
-                            <X className="h-5 w-5" />
-                        ) : (
-                            <Menu className="h-5 w-5" />
-                        )}
-                    </Button>
+                    <div className="flex items-center space-x-1 md:hidden">
+                        <ThemeToggle />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={toggleMobileMenu}
+                            aria-label="Toggle mobile menu"
+                        >
+                            {isMobileMenuOpen ? (
+                                <X className="h-5 w-5" />
+                            ) : (
+                                <Menu className="h-5 w-5" />
+                            )}
+                        </Button>
+                    </div>
                 </div>
 
                 {isMobileMenuOpen && !isAuthenticated && (
