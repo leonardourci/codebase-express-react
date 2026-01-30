@@ -76,7 +76,10 @@ export function SubscriptionPricingGrid({
                                         disabled={checkoutLoading === plan.id || !isEmailVerified}
                                         className={cn(
                                             'w-full transition-all duration-300',
-                                            index === 1 ? 'shadow-md hover:shadow-lg' : ''
+                                            index === 1 ? 'shadow-md hover:shadow-lg' : '',
+                                            (checkoutLoading === plan.id || !isEmailVerified)
+                                                ? 'cursor-not-allowed'
+                                                : 'cursor-pointer'
                                         )}
                                         size="lg"
                                     >
