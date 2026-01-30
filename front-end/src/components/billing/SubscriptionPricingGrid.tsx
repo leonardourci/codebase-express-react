@@ -2,6 +2,7 @@ import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import type { IProduct } from '@/types'
 
@@ -19,7 +20,8 @@ export function SubscriptionPricingGrid({
     isEmailVerified
 }: SubscriptionPricingGridProps) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <TooltipProvider>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans.map((plan, index) => (
                 <Card
                     key={plan.id}
@@ -66,27 +68,39 @@ export function SubscriptionPricingGrid({
                         )}
                     </CardContent>
                     <CardFooter>
-                        <Button
-                            onClick={() => onSubscribe(plan.id)}
-                            disabled={checkoutLoading === plan.id || !isEmailVerified}
-                            className={cn(
-                                'w-full transition-all duration-300',
-                                index === 1 ? 'shadow-md hover:shadow-lg' : ''
+                        <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                                <div className="w-full">
+                                    <Button
+                                        onClick={() => onSubscribe(plan.id)}
+                                        disabled={checkoutLoading === plan.id || !isEmailVerified}
+                                        className={cn(
+                                            'w-full transition-all duration-300',
+                                            index === 1 ? 'shadow-md hover:shadow-lg' : ''
+                                        )}
+                                        size="lg"
+                                    >
+                                        {checkoutLoading === plan.id ? (
+                                            <>
+                                                <LoadingSpinner size="sm" className="mr-2" />
+                                                Loading...
+                                            </>
+                                        ) : (
+                                            'Subscribe'
+                                        )}
+                                    </Button>
+                                </div>
+                            </TooltipTrigger>
+                            {!isEmailVerified && (
+                                <TooltipContent>
+                                    <p>You must verify your email before subscribing</p>
+                                </TooltipContent>
                             )}
-                            size="lg"
-                        >
-                            {checkoutLoading === plan.id ? (
-                                <>
-                                    <LoadingSpinner size="sm" className="mr-2" />
-                                    Loading...
-                                </>
-                            ) : (
-                                'Subscribe'
-                            )}
-                        </Button>
+                        </Tooltip>
                     </CardFooter>
                 </Card>
             ))}
-        </div>
+            </div>
+        </TooltipProvider>
     )
 }
