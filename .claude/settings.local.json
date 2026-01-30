@@ -17,7 +17,8 @@
       "Bash(npm run db:migrate:*)",
       "Bash(ls:*)",
       "Bash(docker ps:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }
