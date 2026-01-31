@@ -6,20 +6,20 @@ set -e
 #
 # Usage:
 #   chmod +x deploy/setup.sh
-#   ./deploy/setup.sh <domain> <project_name>
+#   ./deploy/setup.sh <domain>
 #
 # Example:
-#   ./deploy/setup.sh meusite.com.br meusite
+#   ./deploy/setup.sh meusite.com.br
 #
 # Prerequisites:
 #   - Ubuntu/Debian VPS with root or sudo access
 #   - Domain pointing to VPS IP (DNS A record)
 # =============================================================================
 
-DOMAIN=${1:?"Usage: ./deploy/setup.sh <domain> <project_name>"}
-PROJECT_NAME=${2:?"Usage: ./deploy/setup.sh <domain> <project_name>"}
-PROJECT_DIR="/var/www/${PROJECT_NAME}"
+DOMAIN=${1:?"Usage: ./deploy/setup.sh <domain>"}
 CURRENT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+PROJECT_NAME="$(basename "${CURRENT_DIR}")"
+PROJECT_DIR="/var/www/${PROJECT_NAME}"
 
 echo "========================================="
 echo " Deploy Setup"
@@ -139,7 +139,6 @@ echo ""
 echo "[8/8] Starting application with PM2..."
 cd "${PROJECT_DIR}"
 
-# Update ecosystem config paths
 pm2 start deploy/ecosystem.config.cjs
 pm2 save
 pm2 startup | tail -1 | sudo bash || true

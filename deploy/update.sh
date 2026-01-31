@@ -5,13 +5,13 @@ set -e
 # VPS Update Script - redeploy after code changes
 #
 # Usage:
-#   ./deploy/update.sh <project_name>
+#   ./deploy/update.sh
 #
-# Example:
-#   ./deploy/update.sh meusite
+# Detects the project directory automatically from the script location.
 # =============================================================================
 
-PROJECT_NAME=${1:?"Usage: ./deploy/update.sh <project_name>"}
+CURRENT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+PROJECT_NAME="$(basename "${CURRENT_DIR}")"
 PROJECT_DIR="/var/www/${PROJECT_NAME}"
 
 echo "========================================="
