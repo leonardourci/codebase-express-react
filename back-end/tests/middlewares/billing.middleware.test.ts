@@ -7,7 +7,7 @@ jest.mock('../../src/utils/stripe', () => ({
     }
 }))
 
-jest.mock('../../src/utils/globalConfig', () => ({
+jest.mock('../../src/utils/global-config', () => ({
     stripeSecretKey: 'whsec_test_secret'
 }))
 

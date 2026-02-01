@@ -25,19 +25,19 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 					throw new Error(`Product with external ID "${externalProductId}" not found`)
 				}
 
-				console.log({
-					userEmail: paidInvoice.customer_email,
-					productId: product.id,
-					stripeCustomerId: paidInvoice.customer,
-					stripeSubscriptionId: lineItems[0].subscription,
-					expiresAt: lineItems[0].period.end
-				})
+				// Stripe webhooks return subscription as string ID by default (not expanded)
+				const subscription = lineItems[0].subscription
+				const subscriptionId = typeof subscription === 'string' ? subscription : subscription?.id
+
+				if (!subscriptionId) {
+					throw new Error('Subscription missing from invoice line item')
+				}
 
 				await registerUserBilling({
 					userEmail: paidInvoice.customer_email || '',
 					productId: product.id,
 					externalCustomerId: paidInvoice.customer as string,
-					externalSubscriptionId: lineItems[0].subscription as string,
+					externalSubscriptionId: subscriptionId,
 					expiresAt: lineItems[0].period.end,
 
 					externalPaymentIntentId: paidInvoice.id
@@ -48,13 +48,19 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 
 		case 'invoice.payment_failed': {
 			const failedInvoice = billingEvent.data.object
-			console.log('invoice.payment_failed', {
-				customer: failedInvoice.customer,
-				invoiceId: failedInvoice.id,
-				status: failedInvoice.status
-			})
-			const subscriptionId = failedInvoice.lines?.data?.[0]?.subscription
-			await updateBillingOnPaymentFailed(String(subscriptionId || ''))
+			const subscription = failedInvoice.lines?.data?.[0]?.subscription
+
+			if (!subscription) {
+				throw new Error('Subscription missing from invoice line item')
+			}
+
+			/**
+			 * Stripe webhooks return subscription as string ID by default (not expanded)
+			 * but the type allows string | Subscription | null, so we handle both cases
+			 */
+			const subscriptionId = typeof subscription === 'string' ? subscription : subscription.id
+
+			await updateBillingOnPaymentFailed(subscriptionId)
 			break
 		}
 
@@ -77,21 +83,12 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 				currentPeriodEnd: expiresAt
 			})
 
-			console.log('customer.subscription.updated', {
-				subscriptionId: updatedSubscription.id,
-				status: updatedSubscription.status,
-				cancelAtPeriodEnd: updatedSubscription.cancel_at_period_end
-			})
-
 			break
 		}
 
 		case 'customer.subscription.deleted': {
 			const deletedSubscription = billingEvent.data.object
-			console.log('customer.subscription.deleted', {
-				subscriptionId: deletedSubscription.id,
-				customer: deletedSubscription.customer
-			})
+		
 			await updateBillingOnSubscriptionDeleted(deletedSubscription.id)
 			break
 		}

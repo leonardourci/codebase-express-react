@@ -4,7 +4,7 @@ import { CustomError, ZodValidationError } from '../../src/utils/errors'
 import { EStatusCodes } from '../../src/utils/status-codes'
 import globalConfig from '../../src/utils/global-config'
 
-jest.mock('../../src/utils/globalConfig', () => ({
+jest.mock('../../src/utils/global-config', () => ({
     jwtSecret: 'test-secret-key'
 }))
 
