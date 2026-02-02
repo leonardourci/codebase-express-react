@@ -1,4 +1,4 @@
-import { getTestDb, cleanTestData, closeTestDb } from '../setup/test-db'
+import { getTestDb, cleanTestData, closeTestDb, seedFreeTierProduct } from '../setup/test-db'
 import {
     createBilling,
     getBillingByUserId,
@@ -26,6 +26,7 @@ describe('Billing Repository', () => {
 
     beforeEach(async () => {
         await cleanTestData()
+        await seedFreeTierProduct()
 
         // Create test user
         testUser = await createUser({
@@ -41,11 +42,11 @@ describe('Billing Repository', () => {
             name: 'Test Product',
             description: 'A test product for billing',
             priceInCents: 2999,
-            currency: 'USD',
-            type: 'subscription',
             externalProductId: 'prod_test123',
             externalPriceId: 'price_test123',
-            active: true
+            active: true,
+            isFreeTier: false,
+            maxProjects: null
         }
 
         const dbData = keysToSnakeCase<typeof productData, Partial<IProductDbRow>>(productData)
@@ -58,7 +59,6 @@ describe('Billing Repository', () => {
             const billingData: ICreateBilling = {
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_test123',
                 externalSubscriptionId: 'sub_test123',
                 externalCustomerId: 'cus_test123',
                 status: 'active',
@@ -71,7 +71,6 @@ describe('Billing Repository', () => {
             expect(result.id).toBeDefined()
             expect(result.userId).toBe(billingData.userId)
             expect(result.productId).toBe(billingData.productId)
-            expect(result.externalPaymentIntentId).toBe(billingData.externalPaymentIntentId)
             expect(result.externalSubscriptionId).toBe(billingData.externalSubscriptionId)
             expect(result.externalCustomerId).toBe(billingData.externalCustomerId)
             expect(result.status).toBe(billingData.status)
@@ -86,7 +85,6 @@ describe('Billing Repository', () => {
             const billingData: ICreateBilling = {
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_test456',
                 externalSubscriptionId: 'sub_test456',
                 externalCustomerId: 'cus_test456',
                 status: 'active',
@@ -114,7 +112,6 @@ describe('Billing Repository', () => {
             const billingData: ICreateBilling = {
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_test789',
                 externalSubscriptionId: 'sub_test789',
                 externalCustomerId: 'cus_test789',
                 status: 'active',
@@ -142,7 +139,6 @@ describe('Billing Repository', () => {
             const billingData: ICreateBilling = {
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_external_123',
                 externalSubscriptionId,
                 externalCustomerId: 'cus_external_123',
                 status: 'active',
@@ -172,7 +168,6 @@ describe('Billing Repository', () => {
             const billingData: ICreateBilling = {
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_update_test',
                 externalSubscriptionId: 'sub_update_test',
                 externalCustomerId: 'cus_update_test',
                 status: 'active',

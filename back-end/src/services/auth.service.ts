@@ -17,6 +17,7 @@ import {
 	updateUserById,
 	getUserById
 } from '../database/repositories/user.repository'
+import { getFreeTierProduct } from '../database/repositories/product.repository'
 import { removeUserSensitive } from './user.service'
 import { IUser, IUserProfile } from '../types/user'
 import globalConfig from '../utils/global-config'
@@ -72,6 +73,8 @@ export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<I
 			const randomPassword = crypto.randomUUID()
 			const passwordHash = bcrypt.hashSync(randomPassword, Number(globalConfig.hashSalt))
 
+			const defaultProduct = await getFreeTierProduct()
+
 			user = await createUser({
 				email,
 				fullName,
@@ -79,6 +82,7 @@ export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<I
 				age: 0,
 				passwordHash,
 				googleId,
+				currentProductId: defaultProduct.id,
 
 				// If the user is loggin in with Google, we assume that the email is correct.
 				emailVerified: true
@@ -118,10 +122,13 @@ export async function authenticateUser(input: TLoginInput): Promise<ILoginRespon
 export async function registerUser({ password, ...input }: TSignupInput): Promise<IUserProfile> {
 	const passwordHash = bcrypt.hashSync(password, Number(HASH_SALT) ?? '')
 
+	const defaultProduct = await getFreeTierProduct()
+
 	const user = await createUser({
 		...input,
 		passwordHash,
-		emailVerified: false
+		emailVerified: false,
+		currentProductId: defaultProduct.id
 	})
 
 	const verificationToken = generateJwtToken(

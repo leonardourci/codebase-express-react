@@ -1,6 +1,6 @@
 import { createTestClient, createAuthenticatedTestClient } from '../setup/test-client'
 import { startTestServer, stopTestServer } from '../setup/test-server'
-import { cleanTestData, closeTestDb, getTestDb } from '../setup/test-db'
+import { cleanTestData, closeTestDb, getTestDb, seedFreeTierProduct } from '../setup/test-db'
 import type { TSignupInput, TLoginInput } from '../../src/types/auth'
 import jwt from 'jsonwebtoken'
 import globalConfig from '../../src/utils/global-config'
@@ -24,6 +24,7 @@ describe('Authentication Integration Tests', () => {
 
     beforeEach(async () => {
         await cleanTestData()
+        await seedFreeTierProduct()
     })
 
     describe('User Registration', () => {

@@ -4,7 +4,7 @@ import { CustomError, ZodValidationError } from '../../src/utils/errors'
 import { EStatusCodes } from '../../src/utils/status-codes'
 import globalConfig from '../../src/utils/global-config'
 
-jest.mock('../../src/utils/globalConfig', () => ({
+jest.mock('../../src/utils/global-config', () => ({
     jwtSecret: 'test-secret-key'
 }))
 
@@ -36,7 +36,7 @@ describe('JWT Utilities', () => {
         })
 
         it('should generate tokens with 7 day expiration', () => {
-            const token = generateJwtToken({ userId: mockUserId })
+            const token = generateJwtToken({ userId: mockUserId }, { expiresIn: '7d' })
             const decoded = jwt.decode(token) as any
 
             expect(decoded.exp).toBeDefined()
@@ -50,10 +50,9 @@ describe('JWT Utilities', () => {
 
     describe('verifyJwtToken', () => {
         it('should verify a valid token successfully', () => {
-            const validToken = generateJwtToken({ userId: mockUserId })
-            const bearerToken = `Bearer ${validToken}`
+            const validToken = generateJwtToken({ userId: mockUserId }, { expiresIn: '7d' })
 
-            expect(() => verifyJwtToken({ token: bearerToken })).not.toThrow()
+            expect(() => verifyJwtToken({ token: validToken })).not.toThrow()
         })
 
         it('should throw ZodValidationError for invalid input format', () => {
@@ -62,16 +61,14 @@ describe('JWT Utilities', () => {
             expect(() => verifyJwtToken({ token: undefined as any })).toThrow(ZodValidationError)
         })
 
-        it('should throw ZodValidationError for token without Bearer prefix', () => {
-            const token = generateJwtToken({ userId: mockUserId })
-
-            expect(() => verifyJwtToken({ token })).toThrow(ZodValidationError)
-            expect(() => verifyJwtToken({ token })).toThrow('Validation failed')
+        it('should throw ZodValidationError for empty token', () => {
+            expect(() => verifyJwtToken({ token: '' })).toThrow(ZodValidationError)
+            expect(() => verifyJwtToken({ token: '' })).toThrow('Validation failed')
         })
 
         it('should throw CustomError for invalid token format', () => {
-            expect(() => verifyJwtToken({ token: 'Bearer invalid-token' })).toThrow(CustomError)
-            expect(() => verifyJwtToken({ token: 'Bearer invalid-token' })).toThrow('TOKEN_ERROR')
+            expect(() => verifyJwtToken({ token: 'invalid-token' })).toThrow(CustomError)
+            expect(() => verifyJwtToken({ token: 'invalid-token' })).toThrow('TOKEN_ERROR')
         })
 
         it('should throw CustomError for expired token', () => {
@@ -82,7 +79,7 @@ describe('JWT Utilities', () => {
                 { expiresIn: '-1s' } // Already expired
             )
 
-            expect(() => verifyJwtToken({ token: `Bearer ${expiredToken}` })).toThrow(CustomError)
+            expect(() => verifyJwtToken({ token: expiredToken })).toThrow(CustomError)
         })
 
         it('should throw CustomError for token with wrong secret', () => {
@@ -92,12 +89,12 @@ describe('JWT Utilities', () => {
                 { expiresIn: '7d' }
             )
 
-            expect(() => verifyJwtToken({ token: `Bearer ${tokenWithWrongSecret}` })).toThrow(CustomError)
+            expect(() => verifyJwtToken({ token: tokenWithWrongSecret })).toThrow(CustomError)
         })
 
         it('should throw CustomError with UNAUTHORIZED status code', () => {
             try {
-                verifyJwtToken({ token: 'Bearer invalid-token' })
+                verifyJwtToken({ token: 'invalid-token' })
             } catch (error) {
                 expect(error).toBeInstanceOf(CustomError)
                 expect((error as CustomError).statusCode).toBe(EStatusCodes.UNAUTHORIZED)
@@ -107,10 +104,9 @@ describe('JWT Utilities', () => {
 
     describe('decodeJwtToken', () => {
         it('should decode a valid token successfully', () => {
-            const token = generateJwtToken({ userId: mockUserId })
-            const bearerToken = `Bearer ${token}`
+            const token = generateJwtToken({ userId: mockUserId }, { expiresIn: '7d' })
 
-            const decoded = decodeJwtToken({ token: bearerToken })
+            const decoded = decodeJwtToken({ token })
 
             expect(decoded).toBeDefined()
             expect(decoded.userId).toBe(mockUserId)
@@ -124,17 +120,17 @@ describe('JWT Utilities', () => {
             expect(() => decodeJwtToken({ token: undefined as any })).toThrow(ZodValidationError)
         })
 
-        it('should decode token without Bearer prefix and handle gracefully', () => {
-            const token = generateJwtToken({ userId: mockUserId })
+        it('should decode token and handle gracefully', () => {
+            const token = generateJwtToken({ userId: mockUserId }, { expiresIn: '7d' })
 
             // This should work because jwt.decode doesn't validate the signature
-            const decoded = decodeJwtToken({ token: `Bearer ${token}` })
+            const decoded = decodeJwtToken({ token })
             expect(decoded.userId).toBe(mockUserId)
         })
 
-        it('should handle malformed Bearer token', () => {
+        it('should handle malformed token', () => {
             // jwt.decode returns null for invalid tokens
-            const result = decodeJwtToken({ token: 'Bearer invalid-token' })
+            const result = decodeJwtToken({ token: 'invalid-token' })
             expect(result).toBeNull()
         })
 
@@ -149,15 +145,15 @@ describe('JWT Utilities', () => {
                 { expiresIn: '7d' }
             )
 
-            const decoded = decodeJwtToken({ token: `Bearer ${tokenWithClaims}` }) as any
+            const decoded = decodeJwtToken({ token: tokenWithClaims }) as any
 
             expect(decoded.userId).toBe(mockUserId)
             expect(decoded.role).toBe('admin')
             expect(decoded.permissions).toEqual(['read', 'write'])
         })
 
-        it('should handle empty Bearer token', () => {
-            const result = decodeJwtToken({ token: 'Bearer ' })
+        it('should handle invalid format token', () => {
+            const result = decodeJwtToken({ token: 'not-a-jwt-token' })
             expect(result).toBeNull()
         })
     })
@@ -165,14 +161,13 @@ describe('JWT Utilities', () => {
     describe('integration tests', () => {
         it('should generate, verify, and decode token in sequence', () => {
             // Generate token
-            const token = generateJwtToken({ userId: mockUserId })
-            const bearerToken = `Bearer ${token}`
+            const token = generateJwtToken({ userId: mockUserId }, { expiresIn: '7d' })
 
             // Verify token
-            expect(() => verifyJwtToken({ token: bearerToken })).not.toThrow()
+            expect(() => verifyJwtToken({ token })).not.toThrow()
 
             // Decode token
-            const decoded = decodeJwtToken({ token: bearerToken })
+            const decoded = decodeJwtToken({ token })
             expect(decoded.userId).toBe(mockUserId)
         })
 
@@ -180,21 +175,18 @@ describe('JWT Utilities', () => {
             const userId = 'integration-test-user'
 
             // Generate
-            const token = generateJwtToken({ userId })
+            const token = generateJwtToken({ userId }, { expiresIn: '7d' })
             expect(token).toBeDefined()
 
-            // Format as Bearer token
-            const bearerToken = `Bearer ${token}`
-
             // Verify
-            expect(() => verifyJwtToken({ token: bearerToken })).not.toThrow()
+            expect(() => verifyJwtToken({ token })).not.toThrow()
 
             // Decode and verify contents
-            const decoded = decodeJwtToken({ token: bearerToken })
+            const decoded = decodeJwtToken({ token })
             expect(decoded.userId).toBe(userId)
             expect(decoded.iat).toBeDefined()
             expect(decoded.exp).toBeDefined()
-            expect(decoded.exp).toBeGreaterThan(decoded.iat)
+            expect(decoded.exp!).toBeGreaterThan(decoded.iat!)
         })
     })
 })

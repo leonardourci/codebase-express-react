@@ -1,7 +1,7 @@
 import { Knex } from 'knex'
 
 export async function up(knex: Knex): Promise<void> {
-    return knex.schema.createTable('users', (table) => {
+    await knex.schema.createTable('users', (table) => {
         table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'))
         table.string('email').notNullable().unique()
         table.string('full_name').notNullable()
@@ -12,10 +12,11 @@ export async function up(knex: Knex): Promise<void> {
         table.text('refresh_token').nullable()
         table.boolean('email_verified').notNullable().defaultTo(false)
         table.text('email_verification_token').nullable()
+        table.uuid('current_product_id').nullable()
         table.timestamps(true, true)
     })
 }
 
 export async function down(knex: Knex): Promise<void> {
-    return knex.schema.dropTable('users')
+    await knex.schema.dropTable('users')
 }

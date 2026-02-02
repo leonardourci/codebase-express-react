@@ -13,6 +13,10 @@ const config: Knex.Config = {
 		tableName: 'knex_migrations',
 		directory: path.join(__dirname, '../db/migrations'),
 		extension: globalConfig.nodeEnv === 'production' ? 'js' : 'ts'
+	},
+	seeds: {
+		directory: path.join(__dirname, '../db/seeds'),
+		extension: globalConfig.nodeEnv === 'production' ? 'js' : 'ts'
 	}
 }
 

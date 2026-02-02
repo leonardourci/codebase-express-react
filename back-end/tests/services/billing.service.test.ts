@@ -7,12 +7,15 @@ import {
 } from '../../src/services/billing.service'
 import * as userRepository from '../../src/database/repositories/user.repository'
 import * as billingRepository from '../../src/database/repositories/billing.repository'
+import * as productRepository from '../../src/database/repositories/product.repository'
 
 jest.mock('../../src/database/repositories/user.repository')
 jest.mock('../../src/database/repositories/billing.repository')
+jest.mock('../../src/database/repositories/product.repository')
 
 const mockUserRepository = userRepository as jest.Mocked<typeof userRepository>
 const mockBillingRepository = billingRepository as jest.Mocked<typeof billingRepository>
+const mockProductRepository = productRepository as jest.Mocked<typeof productRepository>
 
 describe('Billing Service', () => {
     beforeEach(() => {
@@ -26,14 +29,14 @@ describe('Billing Service', () => {
             externalCustomerId: 'cus_123',
             externalSubscriptionId: 'sub_123',
             expiresAt: 1640995200, // timestamp
-            externalPaymentIntentId: 'pi_123'
         }
 
         it('should create new billing when user exists and has no billing', async () => {
             const mockUser = {
                 id: 'user-123',
                 email: 'test@example.com',
-                fullName: 'Test User'
+                fullName: 'Test User',
+                emailVerified: true
             }
 
             const mockCreatedBilling = {
@@ -41,7 +44,6 @@ describe('Billing Service', () => {
                 userId: mockUser.id,
                 productId: billingInput.productId,
                 status: 'active',
-                externalPaymentIntentId: billingInput.externalPaymentIntentId,
                 externalSubscriptionId: billingInput.externalSubscriptionId,
                 externalCustomerId: billingInput.externalCustomerId,
                 expiresAt: new Date(billingInput.expiresAt * 1000),
@@ -50,8 +52,10 @@ describe('Billing Service', () => {
             }
 
             mockUserRepository.getUserByEmail.mockResolvedValue(mockUser as any)
+            mockUserRepository.getUserById.mockResolvedValue(mockUser as any)
             mockBillingRepository.getBillingByUserId.mockResolvedValue(null)
             mockBillingRepository.createBilling.mockResolvedValue(mockCreatedBilling as any)
+            mockUserRepository.updateUserById.mockResolvedValue(mockUser as any)
 
             await registerUserBilling(billingInput)
 
@@ -60,7 +64,6 @@ describe('Billing Service', () => {
             expect(mockBillingRepository.createBilling).toHaveBeenCalledWith({
                 userId: mockUser.id,
                 productId: billingInput.productId,
-                externalPaymentIntentId: billingInput.externalPaymentIntentId,
                 externalSubscriptionId: billingInput.externalSubscriptionId,
                 externalCustomerId: billingInput.externalCustomerId,
                 status: 'active',
@@ -73,7 +76,8 @@ describe('Billing Service', () => {
             const mockUser = {
                 id: 'user-123',
                 email: 'test@example.com',
-                fullName: 'Test User'
+                fullName: 'Test User',
+                emailVerified: true
             }
 
             const mockBilling = {
@@ -89,8 +93,10 @@ describe('Billing Service', () => {
             }
 
             mockUserRepository.getUserByEmail.mockResolvedValue(mockUser as any)
+            mockUserRepository.getUserById.mockResolvedValue(mockUser as any)
             mockBillingRepository.getBillingByUserId.mockResolvedValue(mockBilling as any)
             mockBillingRepository.updateBillingByUserId.mockResolvedValue(mockUpdatedBilling as any)
+            mockUserRepository.updateUserById.mockResolvedValue(mockUser as any)
 
             await registerUserBilling(billingInput)
 
@@ -265,22 +271,20 @@ describe('Billing Service', () => {
             const externalSubscriptionId = 'sub_123'
             const mockBilling = {
                 id: 'billing-123',
+                userId: 'user-123',
                 externalSubscriptionId,
                 status: 'active'
             }
 
-            const mockDate = new Date('2024-01-01T00:00:00.000Z')
-            const mockUpdatedBilling = {
-                ...mockBilling,
-                status: 'canceled',
-                expiresAt: mockDate,
-                updatedAt: new Date()
+            const mockFreeTierProduct = {
+                id: 'free-tier-product-id',
+                name: 'Free Tier'
             }
 
-            jest.spyOn(global, 'Date').mockImplementation(() => mockDate as any)
-
             mockBillingRepository.getBillingByExternalSubscriptionId.mockResolvedValue(mockBilling as any)
-            mockBillingRepository.updateBillingById.mockResolvedValue(mockUpdatedBilling as any)
+            mockBillingRepository.updateBillingById.mockResolvedValue({ ...mockBilling, status: 'canceled' } as any)
+            mockProductRepository.getFreeTierProduct.mockResolvedValue(mockFreeTierProduct as any)
+            mockUserRepository.updateUserById.mockResolvedValue({} as any)
 
             await updateBillingOnSubscriptionDeleted(externalSubscriptionId)
 
@@ -288,10 +292,13 @@ describe('Billing Service', () => {
             expect(mockBillingRepository.updateBillingById).toHaveBeenCalledWith({
                 id: mockBilling.id,
                 status: 'canceled',
-                expiresAt: mockDate
+                expiresAt: expect.any(Date)
             })
-
-            jest.restoreAllMocks()
+            expect(mockProductRepository.getFreeTierProduct).toHaveBeenCalled()
+            expect(mockUserRepository.updateUserById).toHaveBeenCalledWith({
+                id: mockBilling.userId,
+                updates: { currentProductId: mockFreeTierProduct.id }
+            })
         })
 
         it('should do nothing when externalSubscriptionId is empty', async () => {
