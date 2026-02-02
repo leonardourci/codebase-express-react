@@ -3,7 +3,7 @@ import { IProduct } from "@/types"
 export const PRICING_PLANS: IProduct[] = [
     {
         id: 'basic',
-        name: 'Em Dia',
+        name: 'basic',
         description: 'Perfect for getting started',
         priceInCents: 999,
         isFreeTier: true,
@@ -16,8 +16,8 @@ export const PRICING_PLANS: IProduct[] = [
         ]
     },
     {
-        id: '1d5198c4-d2f9-452b-ba8a-26a0c1685459',
-        name: 'Em Alta',
+        id: 'pro',
+        name: 'pro',
         description: 'Everything you need to grow your business',
         priceInCents: 2999,
         isFreeTier: true,
@@ -32,7 +32,7 @@ export const PRICING_PLANS: IProduct[] = [
     },
     {
         id: 'enterprise',
-        name: 'Em Destaque',
+        name: 'enterprise',
         description: 'For large teams and organizations',
         priceInCents: 9999,
         isFreeTier: true,
