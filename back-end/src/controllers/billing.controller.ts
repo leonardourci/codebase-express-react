@@ -39,8 +39,6 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 					externalCustomerId: paidInvoice.customer as string,
 					externalSubscriptionId: subscriptionId,
 					expiresAt: lineItems[0].period.end,
-
-					externalPaymentIntentId: paidInvoice.id
 				})
 			}
 			break
@@ -50,7 +48,9 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 			const failedInvoice = billingEvent.data.object
 			const subscription = failedInvoice.lines?.data?.[0]?.subscription
 
-			if (!subscription) {
+			const subscriptionId = typeof subscription === 'string' ? subscription : subscription?.id
+
+			if (!subscriptionId) {
 				throw new Error('Subscription missing from invoice line item')
 			}
 
@@ -58,7 +58,6 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 			 * Stripe webhooks return subscription as string ID by default (not expanded)
 			 * but the type allows string | Subscription | null, so we handle both cases
 			 */
-			const subscriptionId = typeof subscription === 'string' ? subscription : subscription.id
 
 			await updateBillingOnPaymentFailed(subscriptionId)
 			break
@@ -68,7 +67,7 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 			const updatedSubscription = billingEvent.data.object
 
 			const currentPeriodEnd = updatedSubscription.items.data[0]?.current_period_end
-			
+
 			if (!currentPeriodEnd) {
 				throw new Error('Subscription item missing current_period_end')
 			}
@@ -88,7 +87,7 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 
 		case 'customer.subscription.deleted': {
 			const deletedSubscription = billingEvent.data.object
-		
+
 			await updateBillingOnSubscriptionDeleted(deletedSubscription.id)
 			break
 		}

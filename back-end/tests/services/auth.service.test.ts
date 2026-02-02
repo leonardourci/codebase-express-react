@@ -6,6 +6,7 @@ import { CustomError } from '../../src/utils/errors'
 import { EStatusCodes } from '../../src/utils/status-codes'
 import { TLoginInput, TSignupInput } from '../../src/types/auth'
 import { TRefreshTokenInput } from '../../src/types/refreshToken'
+import { IUser } from '../../src/types/user'
 
 jest.mock('bcrypt')
 jest.mock('../../src/database/repositories/user.repository')
@@ -25,6 +26,23 @@ beforeAll(() => {
 
 afterAll(() => {
     process.env = originalEnv
+})
+
+const createMockUser = (overrides?: Partial<IUser>): IUser => ({
+    id: 'user-123',
+    email: 'test@example.com',
+    fullName: 'Test User',
+    phone: '+1234567890',
+    age: 25,
+    passwordHash: 'hashedPassword',
+    refreshToken: null,
+    googleId: null,
+    emailVerified: true,
+    emailVerificationToken: null,
+    currentProductId: null,
+    createdAt: new Date(),
+    updatedAt: null,
+    ...overrides
 })
 
 describe('Auth Service', () => {
@@ -54,7 +72,7 @@ describe('Auth Service', () => {
             mockJwt.generateJwtToken
                 .mockReturnValueOnce(mockAccessToken)
                 .mockReturnValueOnce(mockRefreshToken)
-            mockUserRepository.updateUserById.mockResolvedValue(undefined)
+            mockUserRepository.updateUserById.mockResolvedValue(createMockUser({ refreshToken: mockRefreshToken }))
 
             const result = await authenticateUser(loginInput)
 
@@ -134,7 +152,9 @@ describe('Auth Service', () => {
                 email: signupInput.email,
                 phone: signupInput.phone,
                 age: signupInput.age,
-                passwordHash: hashedPassword
+                passwordHash: hashedPassword,
+                emailVerified: false,
+                currentProductId: undefined
             })
             expect(result).toEqual(mockCreatedUser)
         })
@@ -160,7 +180,7 @@ describe('Auth Service', () => {
             mockJwt.generateJwtToken
                 .mockReturnValueOnce(newAccessToken)
                 .mockReturnValueOnce(newRefreshToken)
-            mockUserRepository.updateUserById.mockResolvedValue(undefined)
+            mockUserRepository.updateUserById.mockResolvedValue(createMockUser({ refreshToken: newRefreshToken }))
 
             const result = await refreshAccessToken(refreshTokenInput)
 
@@ -207,7 +227,7 @@ describe('Auth Service', () => {
         it('should successfully revoke user refresh token', async () => {
             const userId = 'user-123'
 
-            mockUserRepository.updateUserById.mockResolvedValue(undefined)
+            mockUserRepository.updateUserById.mockResolvedValue(createMockUser({ refreshToken: null }))
 
             await revokeUserRefreshToken({ userId })
 

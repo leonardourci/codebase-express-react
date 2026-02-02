@@ -48,14 +48,16 @@ describe('Billing Integration Tests', () => {
         const signupResponse = await testClient.auth.signup.mutate(userData)
         testUser = signupResponse
 
+        // Mark email as verified for billing tests
+        const db = getTestDb()
+        await db('users').where({ id: testUser.id }).update({ email_verified: true })
+
         const loginResponse = await testClient.auth.login.mutate({
             email: userData.email,
             password: userData.password
         })
         validToken = loginResponse.accessToken
         authenticatedClient = createAuthenticatedTestClient(baseUrl, validToken)
-
-        const db = getTestDb()
 
         const productData: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'> = {
             name: 'Test Product',
@@ -84,7 +86,6 @@ describe('Billing Integration Tests', () => {
                 productId: testProduct.id,
                 successUrl: 'https://example.com/success',
                 cancelUrl: 'https://example.com/cancel',
-                token: `Bearer ${validToken}`
             }
 
             const response = await authenticatedClient.billing.createCheckoutSession.mutate(checkoutData)
@@ -100,7 +101,6 @@ describe('Billing Integration Tests', () => {
                 productId: 'non-existent-product-id',
                 successUrl: 'https://example.com/success',
                 cancelUrl: 'https://example.com/cancel',
-                token: `Bearer ${validToken}`
             }
 
             await expect(authenticatedClient.billing.createCheckoutSession.mutate(checkoutData))
@@ -112,7 +112,6 @@ describe('Billing Integration Tests', () => {
                 productId: testProduct.id,
                 successUrl: 'invalid-url',
                 cancelUrl: 'invalid-url',
-                token: `Bearer ${validToken}`
             }
 
             await expect(authenticatedClient.billing.createCheckoutSession.mutate(checkoutData))
@@ -124,7 +123,6 @@ describe('Billing Integration Tests', () => {
                 productId: testProduct.id,
                 successUrl: 'https://example.com/success',
                 cancelUrl: 'https://example.com/cancel',
-                token: `Bearer ${validToken}`
             }
 
             await expect(testClient.billing.createCheckoutSession.mutate(checkoutData))
@@ -137,7 +135,6 @@ describe('Billing Integration Tests', () => {
             await createBilling({
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_test123',
                 externalSubscriptionId: 'sub_test123',
                 externalCustomerId: 'cus_test123',
                 status: 'active',
@@ -148,7 +145,6 @@ describe('Billing Integration Tests', () => {
         it('should successfully create customer portal session for user with billing', async () => {
             const portalData: TCreatePortalSessionInput = {
                 returnUrl: 'https://example.com/dashboard',
-                token: `Bearer ${validToken}`
             }
 
             const response = await authenticatedClient.billing.createCustomerPortalSession.mutate(portalData)
@@ -189,7 +185,6 @@ describe('Billing Integration Tests', () => {
         it('should reject portal session creation with invalid return URL', async () => {
             const portalData: TCreatePortalSessionInput = {
                 returnUrl: 'invalid-url',
-                token: `Bearer ${validToken}`
             }
 
             await expect(authenticatedClient.billing.createCustomerPortalSession.mutate(portalData))
@@ -199,7 +194,6 @@ describe('Billing Integration Tests', () => {
         it('should reject portal session creation without authentication', async () => {
             const portalData: TCreatePortalSessionInput = {
                 returnUrl: 'https://example.com/dashboard',
-                token: `Bearer ${validToken}`
             }
 
             await expect(testClient.billing.createCustomerPortalSession.mutate(portalData))
@@ -214,7 +208,6 @@ describe('Billing Integration Tests', () => {
             testBilling = await createBilling({
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_test456',
                 externalSubscriptionId: 'sub_test456',
                 externalCustomerId: 'cus_test456',
                 status: 'active',
@@ -232,7 +225,6 @@ describe('Billing Integration Tests', () => {
             expect(billing!.status).toBe('active')
             expect(billing!.externalCustomerId).toBe('cus_test456')
             expect(billing!.externalSubscriptionId).toBe('sub_test456')
-            expect(billing!.externalPaymentIntentId).toBe('pi_test456')
         })
 
         it('should return null for user without billing data', async () => {
@@ -259,7 +251,6 @@ describe('Billing Integration Tests', () => {
             expect(retrievedBilling!.status).toBe(testBilling.status)
             expect(retrievedBilling!.externalCustomerId).toBe(testBilling.externalCustomerId)
             expect(retrievedBilling!.externalSubscriptionId).toBe(testBilling.externalSubscriptionId)
-            expect(retrievedBilling!.externalPaymentIntentId).toBe(testBilling.externalPaymentIntentId)
             expect(new Date(retrievedBilling!.expiresAt).getTime()).toBe(new Date(testBilling.expiresAt).getTime())
         })
     })
@@ -270,7 +261,6 @@ describe('Billing Integration Tests', () => {
                 productId: '',
                 successUrl: 'https://example.com/success',
                 cancelUrl: 'https://example.com/cancel',
-                token: `Bearer ${validToken}`
             }
 
             await expect(authenticatedClient.billing.createCheckoutSession.mutate(checkoutData))
@@ -283,7 +273,6 @@ describe('Billing Integration Tests', () => {
                 productId: testProduct.id,
                 successUrl: 'https://example.com/success',
                 cancelUrl: 'https://example.com/cancel',
-                token: 'invalid-token'
             }
 
             await expect(invalidClient.billing.createCheckoutSession.mutate(checkoutData))
@@ -295,7 +284,6 @@ describe('Billing Integration Tests', () => {
             await createBilling({
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_test789',
                 externalSubscriptionId: 'sub_test789',
                 externalCustomerId: '',
                 status: 'active',
@@ -304,7 +292,6 @@ describe('Billing Integration Tests', () => {
 
             const portalData: TCreatePortalSessionInput = {
                 returnUrl: 'https://example.com/dashboard',
-                token: `Bearer ${validToken}`
             }
 
             await expect(authenticatedClient.billing.createCustomerPortalSession.mutate(portalData))

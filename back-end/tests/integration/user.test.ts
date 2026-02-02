@@ -107,10 +107,10 @@ describe('User Management Integration Tests', () => {
             const updatedUser = await authenticatedClient.user.updateUserById.mutate(updateData)
 
             expect(updatedUser).toBeDefined()
-            expect(updatedUser.fullName).toBe(updateData.fullName)
-            expect(updatedUser.email).toBe(registeredUser.email) // Should remain unchanged
-            expect(updatedUser.phone).toBe(registeredUser.phone) // Should remain unchanged
-            expect(updatedUser.age).toBe(registeredUser.age) // Should remain unchanged
+            expect(updatedUser!.fullName).toBe(updateData.fullName)
+            expect(updatedUser!.email).toBe(registeredUser.email) // Should remain unchanged
+            expect(updatedUser!.phone).toBe(registeredUser.phone) // Should remain unchanged
+            expect(updatedUser!.age).toBe(registeredUser.age) // Should remain unchanged
         })
 
         it('should successfully update user email', async () => {
@@ -121,8 +121,8 @@ describe('User Management Integration Tests', () => {
             const updatedUser = await authenticatedClient.user.updateUserById.mutate(updateData)
 
             expect(updatedUser).toBeDefined()
-            expect(updatedUser.email).toBe(updateData.email)
-            expect(updatedUser.fullName).toBe(registeredUser.fullName) // Should remain unchanged
+            expect(updatedUser!.email).toBe(updateData.email)
+            expect(updatedUser!.fullName).toBe(registeredUser.fullName) // Should remain unchanged
         })
 
         it('should successfully update user phone', async () => {
@@ -133,8 +133,8 @@ describe('User Management Integration Tests', () => {
             const updatedUser = await authenticatedClient.user.updateUserById.mutate(updateData)
 
             expect(updatedUser).toBeDefined()
-            expect(updatedUser.phone).toBe(updateData.phone)
-            expect(updatedUser.fullName).toBe(registeredUser.fullName) // Should remain unchanged
+            expect(updatedUser!.phone).toBe(updateData.phone)
+            expect(updatedUser!.fullName).toBe(registeredUser.fullName) // Should remain unchanged
         })
 
         it('should successfully update user age', async () => {
@@ -145,8 +145,8 @@ describe('User Management Integration Tests', () => {
             const updatedUser = await authenticatedClient.user.updateUserById.mutate(updateData)
 
             expect(updatedUser).toBeDefined()
-            expect(updatedUser.age).toBe(updateData.age)
-            expect(updatedUser.fullName).toBe(registeredUser.fullName) // Should remain unchanged
+            expect(updatedUser!.age).toBe(updateData.age)
+            expect(updatedUser!.fullName).toBe(registeredUser.fullName) // Should remain unchanged
         })
 
         it('should successfully update multiple fields at once', async () => {
@@ -159,10 +159,10 @@ describe('User Management Integration Tests', () => {
             const updatedUser = await authenticatedClient.user.updateUserById.mutate(updateData)
 
             expect(updatedUser).toBeDefined()
-            expect(updatedUser.fullName).toBe(updateData.fullName)
-            expect(updatedUser.phone).toBe(updateData.phone)
-            expect(updatedUser.age).toBe(updateData.age)
-            expect(updatedUser.email).toBe(registeredUser.email) // Should remain unchanged
+            expect(updatedUser!.fullName).toBe(updateData.fullName)
+            expect(updatedUser!.phone).toBe(updateData.phone)
+            expect(updatedUser!.age).toBe(updateData.age)
+            expect(updatedUser!.email).toBe(registeredUser.email) // Should remain unchanged
         })
 
         it('should reject update with invalid email format', async () => {
@@ -279,9 +279,9 @@ describe('User Management Integration Tests', () => {
             }
 
             const updatedProfile = await authenticatedClient.user.updateUserById.mutate(updateData)
-            expect(updatedProfile.fullName).toBe(updateData.fullName)
-            expect(updatedProfile.age).toBe(updateData.age)
-            expect(updatedProfile.email).toBe(userData.email) // Should remain unchanged
+            expect(updatedProfile!.fullName).toBe(updateData.fullName)
+            expect(updatedProfile!.age).toBe(updateData.age)
+            expect(updatedProfile!.email).toBe(userData.email) // Should remain unchanged
 
             const finalProfile = await authenticatedClient.user.getUserById.query() as IUserProfile
             expect(finalProfile.fullName).toBe(updateData.fullName)

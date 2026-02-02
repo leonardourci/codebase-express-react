@@ -5,7 +5,6 @@ export async function up(knex: Knex): Promise<void> {
         table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'))
         table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE')
         table.uuid('product_id').notNullable().references('id').inTable('products').onDelete('CASCADE')
-        table.string('external_payment_intent_id').notNullable()
         table.string('external_subscription_id').notNullable()
         table.string('external_customer_id').notNullable()
         table.string('status').notNullable()

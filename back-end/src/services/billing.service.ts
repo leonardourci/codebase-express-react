@@ -10,6 +10,7 @@ import { getFreeTierProduct } from '../database/repositories/product.repository'
 import { CustomError } from '../utils/errors'
 import { EStatusCodes } from '../utils/status-codes'
 import { unixTimestampToDate } from '../utils/time'
+import { IUpdateUserBillingInput } from '../types/billing'
 
 async function hasUserVerifiedEmail({ userId }: { userId: string }): Promise<void> {
 	const user = await getUserById({ id: userId })
@@ -26,15 +27,6 @@ async function hasUserVerifiedEmail({ userId }: { userId: string }): Promise<voi
 	}
 }
 
-export interface IUpdateUserBillingInput {
-	userEmail: string
-	productId: string
-	externalCustomerId: string
-	externalSubscriptionId: string
-	expiresAt: number
-	externalPaymentIntentId: string
-}
-
 export const registerUserBilling = async (input: IUpdateUserBillingInput) => {
 	const user = await getUserByEmail({ email: input.userEmail })
 	if (!user) {
@@ -48,7 +40,6 @@ export const registerUserBilling = async (input: IUpdateUserBillingInput) => {
 		await createBilling({
 			userId: user.id,
 			productId: input.productId,
-			externalPaymentIntentId: input.externalPaymentIntentId,
 			externalSubscriptionId: input.externalSubscriptionId,
 			externalCustomerId: input.externalCustomerId,
 			status: 'active',

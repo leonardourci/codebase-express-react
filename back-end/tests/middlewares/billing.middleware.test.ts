@@ -7,9 +7,16 @@ jest.mock('../../src/utils/stripe', () => ({
     }
 }))
 
-jest.mock('../../src/utils/global-config', () => ({
-    stripeSecretKey: 'whsec_test_secret'
-}))
+jest.mock('../../src/utils/global-config', () => {
+    const actual = jest.requireActual('../../src/utils/global-config')
+    return {
+        __esModule: true,
+        default: {
+            ...actual.default,
+            stripeWebhookSecret: 'whsec_test_secret'
+        }
+    }
+})
 
 import stripe from '../../src/utils/stripe'
 

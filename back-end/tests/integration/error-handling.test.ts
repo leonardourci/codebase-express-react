@@ -46,6 +46,10 @@ describe('Error Handling Integration Tests', () => {
         const signupResponse = await testClient.auth.signup.mutate(userData)
         testUser = signupResponse
 
+        // Mark email as verified for billing tests
+        const db = getTestDb()
+        await db('users').where({ id: testUser.id }).update({ email_verified: true })
+
         const loginResponse = await testClient.auth.login.mutate({
             email: userData.email,
             password: userData.password
@@ -53,7 +57,6 @@ describe('Error Handling Integration Tests', () => {
         validToken = loginResponse.accessToken
         authenticatedClient = createAuthenticatedTestClient(baseUrl, validToken)
 
-        const db = getTestDb()
         const productData: Omit<IProduct, 'id' | 'createdAt' | 'updatedAt'> = {
             name: 'Test Product',
             description: 'A test product for error testing',
@@ -360,7 +363,12 @@ describe('Error Handling Integration Tests', () => {
                 age: 30
             }
 
-            await testClient.auth.signup.mutate(userData)
+            const signupResponse = await testClient.auth.signup.mutate(userData)
+
+            // Mark email as verified
+            const db = getTestDb()
+            await db('users').where({ id: signupResponse.id }).update({ email_verified: true })
+
             const loginResponse = await testClient.auth.login.mutate({
                 email: userData.email,
                 password: userData.password
@@ -369,7 +377,6 @@ describe('Error Handling Integration Tests', () => {
 
             const portalData: TCreatePortalSessionInput = {
                 returnUrl: 'https://example.com/dashboard',
-                token: loginResponse.accessToken
             }
 
             try {
@@ -527,7 +534,6 @@ describe('Error Handling Integration Tests', () => {
                 productId: testProduct.id,
                 successUrl: 'https://example.com/success',
                 cancelUrl: 'https://example.com/cancel',
-                token: `Bearer ${validToken}`
             }
 
             try {

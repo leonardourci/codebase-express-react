@@ -55,6 +55,7 @@ describe('Billing Controller', () => {
                         object: {
                             customer_email: 'test@example.com',
                             customer: 'cus_123',
+                            payment_intent: 'pi_test123',
                             lines: {
                                 data: [{
                                     pricing: {
@@ -86,7 +87,6 @@ describe('Billing Controller', () => {
                     externalCustomerId: 'cus_123',
                     externalSubscriptionId: 'sub_123',
                     expiresAt: MOCK_INVOICE_PERIOD_END,
-                    externalPaymentIntentId: expect.any(String)
                 })
                 expect(mockRes.status).toHaveBeenCalledWith(EStatusCodes.OK)
                 expect(mockRes.send).toHaveBeenCalledWith('Webhook processed successfully')
@@ -172,7 +172,7 @@ describe('Billing Controller', () => {
                 expect(mockRes.send).toHaveBeenCalledWith('Webhook processed successfully')
             })
 
-            it('should handle payment_failed with no subscription ID', async () => {
+            it('should throw error when subscription ID is missing', async () => {
                 mockReq.billingEvent = {
                     type: 'invoice.payment_failed',
                     data: {
@@ -181,18 +181,16 @@ describe('Billing Controller', () => {
                             id: 'in_failed_123',
                             status: 'open',
                             lines: {
-                                data: []
+                                data: [{
+                                    subscription: ''
+                                }]
                             }
                         }
                     }
                 } as any
 
-                mockBillingService.updateBillingOnPaymentFailed.mockResolvedValue(undefined)
-
-                await processBillingWebhookHandler(mockReq as IBillingRequest, mockRes as Response)
-
-                expect(mockBillingService.updateBillingOnPaymentFailed).toHaveBeenCalledWith('')
-                expect(mockRes.status).toHaveBeenCalledWith(EStatusCodes.OK)
+                await expect(processBillingWebhookHandler(mockReq as IBillingRequest, mockRes as Response))
+                    .rejects.toThrow('Subscription missing from invoice line item')
             })
         })
 

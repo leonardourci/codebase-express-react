@@ -39,8 +39,6 @@ describe('Product Repository', () => {
             expect(result!.name).toBe(productData.name)
             expect(result!.description).toBe(productData.description)
             expect(result!.priceInCents).toBe(productData.priceInCents)
-            expect(result!.currency).toBe(productData.currency)
-            expect(result!.type).toBe(productData.type)
             expect(result!.externalProductId).toBe(productData.externalProductId)
             expect(result!.externalPriceId).toBe(productData.externalPriceId)
             expect(result!.active).toBe(productData.active)
@@ -59,8 +57,6 @@ describe('Product Repository', () => {
                 name: 'External Test Product',
                 description: 'A test product with external ID',
                 priceInCents: 2999,
-                currency: 'EUR',
-                type: 'one-time',
                 externalProductId: 'prod_external_456',
                 externalPriceId: 'price_external_456',
                 active: true
@@ -134,8 +130,6 @@ describe('Product Repository', () => {
                 name: 'Product 2',
                 description: 'Second product',
                 priceInCents: 2000,
-                currency: 'EUR',
-                type: 'one-time',
                 externalProductId: 'prod_2',
                 externalPriceId: 'price_2',
                 active: true
