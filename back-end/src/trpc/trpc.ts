@@ -68,7 +68,7 @@ export const transformErrorToTRPC = (error: unknown): TRPCError => {
 
   return new TRPCError({
     code: 'INTERNAL_SERVER_ERROR',
-    message: (error as any)?.message || 'Internal server error'
+    message: (error as any)?.message || 'An unexpected error occurred'
   })
 }
 export interface ITRPCContext {
@@ -93,12 +93,12 @@ const t = initTRPC.context<ITRPCContext>().create({
     // In production, remove sensitive data like stack traces and internal paths
     // In development, keep full error details for debugging
     if (isProduction) {
-    console.log('isproduciton')
+      console.log('isproduciton')
 
       // Sanitize error message for production - hide database/internal details
       const sanitizedMessage = shape.message.includes('column') ||
-                               shape.message.includes('table') ||
-                               shape.message.includes('database')
+        shape.message.includes('table') ||
+        shape.message.includes('database')
         ? 'An internal error occurred. Please try again later.'
         : shape.message
 

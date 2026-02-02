@@ -8,6 +8,9 @@ export const mockStripe = {
         sessions: {
             create: jest.fn()
         }
+    },
+    webhooks: {
+        constructEvent: jest.fn()
     }
 }
 

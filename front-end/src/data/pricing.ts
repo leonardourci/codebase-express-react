@@ -1,17 +1,13 @@
 import { IProduct } from "@/types"
 
-export const PRICING_PLANS:IProduct[] = [
+export const PRICING_PLANS: IProduct[] = [
     {
         id: 'basic',
-        name: 'Basic',
+        name: 'basic',
         description: 'Perfect for getting started',
         priceInCents: 999,
-        currency: 'USD',
-        active: true,
-        createdAt: new Date().toString(),
-        type: '',
-        externalPriceId: '',
-        externalProductId: '',
+        isFreeTier: true,
+        maxProjects: 1,
         features: [
             'Up to 5 projects',
             'Basic analytics',
@@ -21,15 +17,11 @@ export const PRICING_PLANS:IProduct[] = [
     },
     {
         id: 'pro',
-        name: 'Pro',
+        name: 'pro',
         description: 'Everything you need to grow your business',
         priceInCents: 2999,
-        currency: 'USD',
-        active: true,
-        createdAt: new Date().toString(),
-        type: '',
-        externalPriceId: '',
-        externalProductId: '',
+        isFreeTier: true,
+        maxProjects: 1,
         features: [
             'Unlimited projects',
             'Advanced analytics',
@@ -40,15 +32,11 @@ export const PRICING_PLANS:IProduct[] = [
     },
     {
         id: 'enterprise',
-        name: 'Enterprise',
+        name: 'enterprise',
         description: 'For large teams and organizations',
         priceInCents: 9999,
-        currency: 'USD',
-        active: true,
-        createdAt: new Date().toString(),
-        type: '',
-        externalPriceId: '',
-        externalProductId: '',
+        isFreeTier: true,
+        maxProjects: 1,
         features: [
             'Everything in Pro',
             'SSO integration',

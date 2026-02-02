@@ -1,10 +1,11 @@
 import { createUser, getUserByEmail, getUserById } from '../../src/database/repositories/user.repository';
-import { cleanTestData } from '../setup/test-db';
+import { cleanTestData, seedFreeTierProduct } from '../setup/test-db';
 import bcrypt from 'bcrypt';
 
 describe('User Repository', () => {
     beforeEach(async () => {
         await cleanTestData();
+        await seedFreeTierProduct();
     });
 
     it('should create and retrieve a user', async () => {

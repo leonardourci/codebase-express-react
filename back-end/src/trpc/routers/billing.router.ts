@@ -11,18 +11,13 @@ export const billingRouter = router({
         .query(async ({ ctx }) => {
             const billing = await getBillingByUserId({ userId: ctx.user.id })
 
-            if (!billing) {
-                return {
-                    hasSubscription: false,
-                    billing: null,
-                    product: null
-                }
-            }
-
-            const product = await getProductById({ id: billing.productId })
+            // Get current product from user's currentProductId (works for both free and paid)
+            const product = ctx.user.currentProductId
+                ? await getProductById({ id: ctx.user.currentProductId })
+                : null
 
             return {
-                hasSubscription: true,
+                hasSubscription: !!billing && billing.status === 'active',
                 billing,
                 product
             }
@@ -30,7 +25,7 @@ export const billingRouter = router({
 
     createCheckoutSession: verifiedEmailProcedure
         .input(createCheckoutSessionSchema)
-        .mutation(async ({ input }) => {
+        .mutation(async ({ input, ctx }) => {
             const product = await getProductById({ id: input.productId })
             if (!product) {
                 throw new TRPCError({
@@ -39,8 +34,16 @@ export const billingRouter = router({
                 })
             }
 
+            if (!product.externalPriceId || !product.externalProductId) {
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: 'This product is not available for purchase'
+                })
+            }
+
             const session = await stripe.checkout.sessions.create({
                 mode: 'subscription',
+                customer_email: ctx.user.email,
                 line_items: [{ price: product.externalPriceId, quantity: 1 }],
                 success_url: input.successUrl,
                 cancel_url: input.cancelUrl,

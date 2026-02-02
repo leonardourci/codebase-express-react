@@ -1,4 +1,4 @@
-import { getTestDb, closeTestDb, cleanTestData } from '../setup/test-db'
+import { getTestDb, closeTestDb, cleanTestData, seedFreeTierProduct } from '../setup/test-db'
 import { createUser, getUserById, getUserByEmail, updateUserById } from '../../src/database/repositories/user.repository'
 import { getProductById, getAllProducts } from '../../src/database/repositories/product.repository'
 import { createBilling, getBillingByUserId, updateBillingById } from '../../src/database/repositories/billing.repository'
@@ -21,6 +21,7 @@ describe('Database Integration Tests', () => {
 
     beforeEach(async () => {
         await cleanTestData()
+        await seedFreeTierProduct()
     })
 
     describe('Database Connection and Migration', () => {
@@ -77,8 +78,6 @@ describe('Database Integration Tests', () => {
             expect(columnNames).toContain('name')
             expect(columnNames).toContain('description')
             expect(columnNames).toContain('price_in_cents')
-            expect(columnNames).toContain('currency')
-            expect(columnNames).toContain('type')
             expect(columnNames).toContain('external_product_id')
             expect(columnNames).toContain('external_price_id')
             expect(columnNames).toContain('active')
@@ -96,7 +95,6 @@ describe('Database Integration Tests', () => {
             expect(columnNames).toContain('id')
             expect(columnNames).toContain('user_id')
             expect(columnNames).toContain('product_id')
-            expect(columnNames).toContain('external_payment_intent_id')
             expect(columnNames).toContain('external_subscription_id')
             expect(columnNames).toContain('external_customer_id')
             expect(columnNames).toContain('status')
@@ -181,11 +179,11 @@ describe('Database Integration Tests', () => {
                 name: 'Test Product',
                 description: 'A test product for integration testing',
                 price_in_cents: 1999,
-                currency: 'USD',
-                type: 'subscription',
                 external_product_id: 'prod_test123',
                 external_price_id: 'price_test123',
-                active: true
+                active: true,
+                is_free_tier: false,
+                max_projects: null
             }).returning('*')
 
             testProduct = {
@@ -193,11 +191,11 @@ describe('Database Integration Tests', () => {
                 name: productRow.name,
                 description: productRow.description,
                 priceInCents: productRow.price_in_cents,
-                currency: productRow.currency,
-                type: productRow.type,
                 externalProductId: productRow.external_product_id,
                 externalPriceId: productRow.external_price_id,
                 active: productRow.active,
+                isFreeTier: productRow.is_free_tier,
+                maxProjects: productRow.max_projects,
                 createdAt: productRow.created_at,
                 updatedAt: productRow.updated_at
             }
@@ -219,8 +217,6 @@ describe('Database Integration Tests', () => {
                 name: 'Another Product',
                 description: 'Another test product',
                 price_in_cents: 2999,
-                currency: 'USD',
-                type: 'one-time',
                 external_product_id: 'prod_test456',
                 external_price_id: 'price_test456',
                 active: true
@@ -231,8 +227,6 @@ describe('Database Integration Tests', () => {
                 name: 'Inactive Product',
                 description: 'An inactive product',
                 price_in_cents: 999,
-                currency: 'USD',
-                type: 'subscription',
                 external_product_id: 'prod_inactive',
                 external_price_id: 'price_inactive',
                 active: false
@@ -240,7 +234,7 @@ describe('Database Integration Tests', () => {
 
             const products = await getAllProducts()
 
-            expect(products).toHaveLength(2) // Only active products
+            expect(products).toHaveLength(3) // Only active products (includes free tier product from seed)
             expect(products.every(p => p.active)).toBe(true)
         })
 
@@ -270,11 +264,11 @@ describe('Database Integration Tests', () => {
                 name: 'Billing Test Product',
                 description: 'Product for billing tests',
                 price_in_cents: 2999,
-                currency: 'USD',
-                type: 'subscription',
                 external_product_id: 'prod_billing123',
                 external_price_id: 'price_billing123',
-                active: true
+                active: true,
+                is_free_tier: false,
+                max_projects: null
             }).returning('*')
 
             testProduct = {
@@ -282,11 +276,11 @@ describe('Database Integration Tests', () => {
                 name: productRow.name,
                 description: productRow.description,
                 priceInCents: productRow.price_in_cents,
-                currency: productRow.currency,
-                type: productRow.type,
                 externalProductId: productRow.external_product_id,
                 externalPriceId: productRow.external_price_id,
                 active: productRow.active,
+                isFreeTier: productRow.is_free_tier,
+                maxProjects: productRow.max_projects,
                 createdAt: productRow.created_at,
                 updatedAt: productRow.updated_at
             }
@@ -296,7 +290,6 @@ describe('Database Integration Tests', () => {
             const billingData: ICreateBilling = {
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_test123',
                 externalSubscriptionId: 'sub_test123',
                 externalCustomerId: 'cus_test123',
                 status: 'active',
@@ -316,7 +309,6 @@ describe('Database Integration Tests', () => {
             const billingData: ICreateBilling = {
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_test456',
                 externalSubscriptionId: 'sub_test456',
                 externalCustomerId: 'cus_test456',
                 status: 'active',
@@ -335,7 +327,6 @@ describe('Database Integration Tests', () => {
             const billingData: ICreateBilling = {
                 userId: testUser.id,
                 productId: testProduct.id,
-                externalPaymentIntentId: 'pi_test789',
                 externalSubscriptionId: 'sub_test789',
                 externalCustomerId: 'cus_test789',
                 status: 'active',
@@ -387,8 +378,6 @@ describe('Database Integration Tests', () => {
                 name: 'FK Test Product',
                 description: 'Product for FK test',
                 price_in_cents: 1999,
-                currency: 'USD',
-                type: 'subscription',
                 external_product_id: 'prod_fk123',
                 external_price_id: 'price_fk123',
                 active: true
@@ -397,7 +386,6 @@ describe('Database Integration Tests', () => {
             const billingData: ICreateBilling = {
                 userId: nonExistentUserId,
                 productId: productRow.id,
-                externalPaymentIntentId: 'pi_fk123',
                 externalSubscriptionId: 'sub_fk123',
                 externalCustomerId: 'cus_fk123',
                 status: 'active',
@@ -421,7 +409,6 @@ describe('Database Integration Tests', () => {
             const billingData: ICreateBilling = {
                 userId: user.id,
                 productId: nonExistentProductId,
-                externalPaymentIntentId: 'pi_fk456',
                 externalSubscriptionId: 'sub_fk456',
                 externalCustomerId: 'cus_fk456',
                 status: 'active',
@@ -462,8 +449,6 @@ describe('Database Integration Tests', () => {
                 name: 'Cascade Test Product',
                 description: 'Product for cascade test',
                 price_in_cents: 1999,
-                currency: 'USD',
-                type: 'subscription',
                 external_product_id: 'prod_cascade123',
                 external_price_id: 'price_cascade123',
                 active: true
@@ -472,7 +457,6 @@ describe('Database Integration Tests', () => {
             const billingData: ICreateBilling = {
                 userId: user.id,
                 productId: productRow.id,
-                externalPaymentIntentId: 'pi_cascade123',
                 externalSubscriptionId: 'sub_cascade123',
                 externalCustomerId: 'cus_cascade123',
                 status: 'active',
