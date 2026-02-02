@@ -1,6 +1,6 @@
 import { createTestClient, createAuthenticatedTestClient } from '../setup/test-client'
 import { startTestServer, stopTestServer } from '../setup/test-server'
-import { cleanTestData, closeTestDb, getTestDb } from '../setup/test-db'
+import { cleanTestData, closeTestDb, getTestDb, seedFreeTierProduct } from '../setup/test-db'
 import type { TSignupInput, TLoginInput } from '../../src/types/auth'
 import type { TCreateCheckoutSessionInput, TCreatePortalSessionInput } from '../../src/types/billing'
 import { IProduct, IProductDbRow } from '../../src/types/product'
@@ -32,6 +32,7 @@ describe('Error Handling Integration Tests', () => {
 
     beforeEach(async () => {
         await cleanTestData()
+        await seedFreeTierProduct()
         setupStripeMocks()
 
         // Create test user and product for authenticated tests
@@ -353,6 +354,7 @@ describe('Error Handling Integration Tests', () => {
         it('should return not found error for user without billing data in portal session', async () => {
             // Clean billing data to simulate user without billing
             await cleanTestData()
+            await seedFreeTierProduct()
 
             // Recreate user without billing
             const userData: TSignupInput = {

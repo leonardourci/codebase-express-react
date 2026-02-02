@@ -1,6 +1,6 @@
 import { createTestClient, createAuthenticatedTestClient } from '../setup/test-client'
 import { startTestServer, stopTestServer } from '../setup/test-server'
-import { cleanTestData, closeTestDb, getTestDb } from '../setup/test-db'
+import { cleanTestData, closeTestDb, getTestDb, seedFreeTierProduct } from '../setup/test-db'
 import type { TSignupInput } from '../../src/types/auth'
 import type { TCreateCheckoutSessionInput, TCreatePortalSessionInput } from '../../src/types/billing'
 import { createBilling, getBillingByUserId } from '../../src/database/repositories/billing.repository'
@@ -34,6 +34,7 @@ describe('Billing Integration Tests', () => {
 
     beforeEach(async () => {
         await cleanTestData()
+        await seedFreeTierProduct()
 
         setupStripeMocks()
 
@@ -156,6 +157,7 @@ describe('Billing Integration Tests', () => {
 
         it('should reject portal session creation for user without billing', async () => {
             await cleanTestData()
+            await seedFreeTierProduct()
 
             // Recreate user and auth but no billing
             const userData: TSignupInput = {
@@ -175,7 +177,6 @@ describe('Billing Integration Tests', () => {
 
             const portalData: TCreatePortalSessionInput = {
                 returnUrl: 'https://example.com/dashboard',
-                token: loginResponse.accessToken
             }
 
             await expect(noBillingClient.billing.createCustomerPortalSession.mutate(portalData))

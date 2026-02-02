@@ -1,4 +1,4 @@
-import { getTestDb, closeTestDb, cleanTestData } from '../setup/test-db'
+import { getTestDb, closeTestDb, cleanTestData, seedFreeTierProduct } from '../setup/test-db'
 import { createUser, getUserById, getUserByEmail, updateUserById } from '../../src/database/repositories/user.repository'
 import { getProductById, getAllProducts } from '../../src/database/repositories/product.repository'
 import { createBilling, getBillingByUserId, updateBillingById } from '../../src/database/repositories/billing.repository'
@@ -21,6 +21,7 @@ describe('Database Integration Tests', () => {
 
     beforeEach(async () => {
         await cleanTestData()
+        await seedFreeTierProduct()
     })
 
     describe('Database Connection and Migration', () => {
@@ -180,7 +181,9 @@ describe('Database Integration Tests', () => {
                 price_in_cents: 1999,
                 external_product_id: 'prod_test123',
                 external_price_id: 'price_test123',
-                active: true
+                active: true,
+                is_free_tier: false,
+                max_projects: null
             }).returning('*')
 
             testProduct = {
@@ -191,6 +194,8 @@ describe('Database Integration Tests', () => {
                 externalProductId: productRow.external_product_id,
                 externalPriceId: productRow.external_price_id,
                 active: productRow.active,
+                isFreeTier: productRow.is_free_tier,
+                maxProjects: productRow.max_projects,
                 createdAt: productRow.created_at,
                 updatedAt: productRow.updated_at
             }
@@ -229,7 +234,7 @@ describe('Database Integration Tests', () => {
 
             const products = await getAllProducts()
 
-            expect(products).toHaveLength(2) // Only active products
+            expect(products).toHaveLength(3) // Only active products (includes free tier product from seed)
             expect(products.every(p => p.active)).toBe(true)
         })
 
@@ -261,7 +266,9 @@ describe('Database Integration Tests', () => {
                 price_in_cents: 2999,
                 external_product_id: 'prod_billing123',
                 external_price_id: 'price_billing123',
-                active: true
+                active: true,
+                is_free_tier: false,
+                max_projects: null
             }).returning('*')
 
             testProduct = {
@@ -272,6 +279,8 @@ describe('Database Integration Tests', () => {
                 externalProductId: productRow.external_product_id,
                 externalPriceId: productRow.external_price_id,
                 active: productRow.active,
+                isFreeTier: productRow.is_free_tier,
+                maxProjects: productRow.max_projects,
                 createdAt: productRow.created_at,
                 updatedAt: productRow.updated_at
             }

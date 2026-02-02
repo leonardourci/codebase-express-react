@@ -25,7 +25,6 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 					throw new Error(`Product with external ID "${externalProductId}" not found`)
 				}
 
-				// Stripe webhooks return subscription as string ID by default (not expanded)
 				const subscription = lineItems[0].subscription
 				const subscriptionId = typeof subscription === 'string' ? subscription : subscription?.id
 
@@ -58,7 +57,6 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 			 * Stripe webhooks return subscription as string ID by default (not expanded)
 			 * but the type allows string | Subscription | null, so we handle both cases
 			 */
-
 			await updateBillingOnPaymentFailed(subscriptionId)
 			break
 		}

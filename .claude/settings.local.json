@@ -18,7 +18,13 @@
       "Bash(ls:*)",
       "Bash(docker ps:*)",
       "Bash(cat:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "WebSearch",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(find:*)",
+      "WebFetch(domain:docs.stripe.com)",
+      "Bash(grep:*)"
     ]
   }
 }

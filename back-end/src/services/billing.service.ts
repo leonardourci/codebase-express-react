@@ -87,11 +87,9 @@ export const updateBillingOnSubscriptionDeleted = async (externalSubscriptionId:
 		expiresAt: new Date()
 	})
 
-	const freeTierProduct = await getFreeTierProduct()
-	if (freeTierProduct) {
-		await updateUserById({
-			id: billing.userId,
-			updates: { currentProductId: freeTierProduct.id }
-		})
-	}
+	const defaultProduct = await getFreeTierProduct()
+	await updateUserById({
+		id: billing.userId,
+		updates: { currentProductId: defaultProduct.id }
+	})
 }

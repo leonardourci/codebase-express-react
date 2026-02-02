@@ -1,4 +1,4 @@
-import { getTestDb, cleanTestData, closeTestDb } from '../setup/test-db'
+import { getTestDb, cleanTestData, closeTestDb, seedFreeTierProduct } from '../setup/test-db'
 import {
     createBilling,
     getBillingByUserId,
@@ -26,6 +26,7 @@ describe('Billing Repository', () => {
 
     beforeEach(async () => {
         await cleanTestData()
+        await seedFreeTierProduct()
 
         // Create test user
         testUser = await createUser({
@@ -43,7 +44,9 @@ describe('Billing Repository', () => {
             priceInCents: 2999,
             externalProductId: 'prod_test123',
             externalPriceId: 'price_test123',
-            active: true
+            active: true,
+            isFreeTier: false,
+            maxProjects: null
         }
 
         const dbData = keysToSnakeCase<typeof productData, Partial<IProductDbRow>>(productData)

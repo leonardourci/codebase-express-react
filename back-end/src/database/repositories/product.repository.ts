@@ -36,15 +36,21 @@ export const getAllProducts = async (): Promise<IProduct[]> => {
     return rows.map(row => keysToCamelCase<IProductDbRow, IProduct>(row))
 }
 
-export const getFreeTierProduct = async (): Promise<IProduct | null> => {
+/**
+ * Retrieves the free tier product.
+ * NOTE: This should always return a product. If it throws an error,
+ * you need to update your database seed to mark one product with is_free_tier = true.
+ */
+export const getFreeTierProduct = async (): Promise<IProduct> => {
     const [row] = await knex(PRODUCTS_TABLE)
-        .where({ price_in_cents: 0 })
-        .whereNull('external_product_id')
+        .where({ is_free_tier: true })
         .select()
         .limit(1)
 
     if (!row) {
-        return null
+        throw new Error(
+            'Free tier product not found. Update your database seed to mark one product with is_free_tier = true.'
+        )
     }
 
     return keysToCamelCase<IProductDbRow, IProduct>(row)

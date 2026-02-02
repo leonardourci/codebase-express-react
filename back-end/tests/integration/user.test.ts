@@ -1,6 +1,6 @@
 import { createTestClient, createAuthenticatedTestClient } from '../setup/test-client'
 import { startTestServer, stopTestServer } from '../setup/test-server'
-import { cleanTestData, closeTestDb, getTestDb } from '../setup/test-db'
+import { cleanTestData, closeTestDb, getTestDb, seedFreeTierProduct } from '../setup/test-db'
 import type { TSignupInput } from '../../src/types/auth'
 import type { IUserProfile, TUpdateUserInput } from '../../src/types/user'
 
@@ -23,6 +23,7 @@ describe('User Management Integration Tests', () => {
 
     beforeEach(async () => {
         await cleanTestData()
+        await seedFreeTierProduct()
     })
 
     describe('Get User Profile', () => {

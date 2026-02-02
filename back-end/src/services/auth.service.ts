@@ -73,8 +73,7 @@ export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<I
 			const randomPassword = crypto.randomUUID()
 			const passwordHash = bcrypt.hashSync(randomPassword, Number(globalConfig.hashSalt))
 
-			// Get free tier product to set as default
-			const freeTierProduct = await getFreeTierProduct()
+			const defaultProduct = await getFreeTierProduct()
 
 			user = await createUser({
 				email,
@@ -83,7 +82,7 @@ export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<I
 				age: 0,
 				passwordHash,
 				googleId,
-				currentProductId: freeTierProduct?.id,
+				currentProductId: defaultProduct.id,
 
 				// If the user is loggin in with Google, we assume that the email is correct.
 				emailVerified: true
@@ -123,14 +122,13 @@ export async function authenticateUser(input: TLoginInput): Promise<ILoginRespon
 export async function registerUser({ password, ...input }: TSignupInput): Promise<IUserProfile> {
 	const passwordHash = bcrypt.hashSync(password, Number(HASH_SALT) ?? '')
 
-	// Get free tier product to set as default
-	const freeTierProduct = await getFreeTierProduct()
+	const defaultProduct = await getFreeTierProduct()
 
 	const user = await createUser({
 		...input,
 		passwordHash,
 		emailVerified: false,
-		currentProductId: freeTierProduct?.id
+		currentProductId: defaultProduct.id
 	})
 
 	const verificationToken = generateJwtToken(

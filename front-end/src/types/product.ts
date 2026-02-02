@@ -4,4 +4,6 @@ export interface IProduct {
     description: string
     priceInCents: number
     features?: string[]
+    isFreeTier: boolean
+    maxProjects: number | null
 }

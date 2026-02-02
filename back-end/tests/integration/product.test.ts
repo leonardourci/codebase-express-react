@@ -36,6 +36,8 @@ describe('Product Integration Tests', () => {
             externalProductId: 'prod_test123',
             externalPriceId: 'price_test123',
             active: true,
+            isFreeTier: false,
+            maxProjects: null,
             ...overrides
         }
 

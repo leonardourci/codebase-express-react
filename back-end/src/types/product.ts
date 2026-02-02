@@ -7,6 +7,8 @@ export interface IProduct extends IBaseModel {
     externalProductId: string | null
     externalPriceId: string | null
     active: boolean
+    isFreeTier: boolean
+    maxProjects: number | null
 }
 
 export interface IProductDbRow {
@@ -17,6 +19,8 @@ export interface IProductDbRow {
     external_product_id: string | null
     external_price_id: string | null
     active: boolean
+    is_free_tier: boolean
+    max_projects: number | null
     created_at: Date
     updated_at: Date | null
 }

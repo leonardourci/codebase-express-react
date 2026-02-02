@@ -37,17 +37,32 @@ You'll need these in the next step.
 
 ## 3. Seed Your Local Database
 
-Your backend looks up products by `external_product_id` and `external_price_id` in the `products` table. Insert rows that match what you created in Stripe:                     
+Your backend looks up products by `external_product_id` and `external_price_id` in the `products` table.
+
+**Option 1: Using the seed file (recommended)**
+
+1. Edit `back-end/src/db/seeds/001_seed_products.ts`
+2. Replace the placeholder `prod_YOUR_*_ID` and `price_YOUR_*_ID` values with the IDs from your Stripe Dashboard
+3. Run the seed:
+
+```bash
+cd back-end
+npm run knex seed:run
+```
+
+**Option 2: Manual SQL**
 
 ```sql
-INSERT INTO products (name, description, price_in_cents, currency, type, external_product_id, external_price_id, active)
+INSERT INTO products (name, description, price_in_cents, external_product_id, external_price_id, active, is_free_tier, max_projects)
 VALUES
-  ('Basic', 'Perfect for getting started', 999, 'USD', 'subscription', 'prod_YOUR_BASIC_ID', 'price_YOUR_BASIC_ID', true),
-  ('Pro', 'Everything you need to grow', 2999, 'USD', 'subscription', 'prod_YOUR_PRO_ID', 'price_YOUR_PRO_ID', true),
-  ('Enterprise', 'For large teams', 9999, 'USD', 'subscription', 'prod_YOUR_ENTERPRISE_ID', 'price_YOUR_ENTERPRISE_ID', true);
+  ('Free', 'Free tier with basic features', 0, NULL, NULL, true, true, 5),
+  ('Basic', 'Everything you need to get started', 2999, 'prod_YOUR_BASIC_ID', 'price_YOUR_BASIC_ID', true, false, 50),
+  ('Pro', 'Everything you need to grow', 4999, 'prod_YOUR_PRO_ID', 'price_YOUR_PRO_ID', true, false, NULL);
 ```
 
 Replace the `prod_` and `price_` values with yours from the dashboard.
+
+**Note:** Exactly one product must have `is_free_tier = true` (the database enforces this with a unique constraint).
 
 ---
 
@@ -211,7 +226,7 @@ Use this checklist when going through all tests:
 - [ ] User's email is pre-filled on the Stripe Checkout page
 - [ ] After payment, `invoice.paid` event returns `200` in the CLI output
 - [ ] `billings` table has a new row with `status = 'active'`
-- [ ] `external_customer_id`, `external_subscription_id`, and `external_payment_intent_id` are populated (not `[object Object]`)
+- [ ] `external_customer_id`, `external_subscription_id`, are populated (not `[object Object]`)
 - [ ] Billing page shows the active subscription
 - [ ] "Manage in Stripe Portal" redirects correctly
 - [ ] After cancellation, `billings.status` updates to `canceled`

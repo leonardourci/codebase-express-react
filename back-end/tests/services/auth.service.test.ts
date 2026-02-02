@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt'
 import { authenticateUser, registerUser, refreshAccessToken, revokeUserRefreshToken } from '../../src/services/auth.service'
 import * as userRepository from '../../src/database/repositories/user.repository'
+import * as productRepository from '../../src/database/repositories/product.repository'
 import * as jwt from '../../src/utils/jwt'
 import { CustomError } from '../../src/utils/errors'
 import { EStatusCodes } from '../../src/utils/status-codes'
@@ -10,10 +11,12 @@ import { IUser } from '../../src/types/user'
 
 jest.mock('bcrypt')
 jest.mock('../../src/database/repositories/user.repository')
+jest.mock('../../src/database/repositories/product.repository')
 jest.mock('../../src/utils/jwt')
 
 const mockBcrypt = bcrypt as jest.Mocked<typeof bcrypt>
 const mockUserRepository = userRepository as jest.Mocked<typeof userRepository>
+const mockProductRepository = productRepository as jest.Mocked<typeof productRepository>
 const mockJwt = jwt as jest.Mocked<typeof jwt>
 
 const originalEnv = process.env
@@ -133,6 +136,10 @@ describe('Auth Service', () => {
 
         it('should successfully register user', async () => {
             const hashedPassword = 'hashedPassword123'
+            const mockFreeTierProduct = {
+                id: 'free-tier-product-id',
+                name: 'Free Tier'
+            }
             const mockCreatedUser = {
                 id: 'user-123',
                 fullName: signupInput.fullName,
@@ -142,11 +149,13 @@ describe('Auth Service', () => {
             }
 
             mockBcrypt.hashSync.mockReturnValue(hashedPassword)
+            mockProductRepository.getFreeTierProduct.mockResolvedValue(mockFreeTierProduct as any)
             mockUserRepository.createUser.mockResolvedValue(mockCreatedUser as any)
 
             const result = await registerUser(signupInput)
 
             expect(mockBcrypt.hashSync).toHaveBeenCalledWith(signupInput.password, 10)
+            expect(mockProductRepository.getFreeTierProduct).toHaveBeenCalled()
             expect(mockUserRepository.createUser).toHaveBeenCalledWith({
                 fullName: signupInput.fullName,
                 email: signupInput.email,
@@ -154,7 +163,7 @@ describe('Auth Service', () => {
                 age: signupInput.age,
                 passwordHash: hashedPassword,
                 emailVerified: false,
-                currentProductId: undefined
+                currentProductId: mockFreeTierProduct.id
             })
             expect(result).toEqual(mockCreatedUser)
         })
