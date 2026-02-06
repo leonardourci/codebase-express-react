@@ -1,3 +1,4 @@
+import db from '../database/knex'
 import { createBilling, getBillingByExternalSubscriptionId, getBillingByUserId, updateBillingById } from '../database/repositories/billing.repository'
 import { getFreeTierProduct } from '../database/repositories/product.repository'
 import { getUserByEmail, updateUserById } from '../database/repositories/user.repository'
@@ -16,18 +17,26 @@ export const registerUserBilling = async (input: IUpdateUserBillingInput) => {
 	const expiresAtDate = unixTimestampToDate(input.expiresAt)
 
 	if (!billing) {
-		await createBilling({
-			userId: user.id,
-			productId: input.productId,
-			externalSubscriptionId: input.externalSubscriptionId,
-			externalCustomerId: input.externalCustomerId,
-			status: 'active',
-			expiresAt: expiresAtDate
-		})
+		await db.transaction(async (trx) => {
+			await createBilling(
+				{
+					userId: user.id,
+					productId: input.productId,
+					externalSubscriptionId: input.externalSubscriptionId,
+					externalCustomerId: input.externalCustomerId,
+					status: 'active',
+					expiresAt: expiresAtDate
+				},
+				trx
+			)
 
-		await updateUserById({
-			id: user.id,
-			updates: { productId: input.productId }
+			await updateUserById(
+				{
+					id: user.id,
+					updates: { productId: input.productId }
+				},
+				trx
+			)
 		})
 	} else {
 		await updateBillingById({
@@ -62,28 +71,38 @@ export const updateBillingOnSubscriptionUpdated = async (input: {
 	const billing = await getBillingByExternalSubscriptionId({ externalSubscriptionId: input.externalSubscriptionId })
 	if (!billing) return
 
-	await updateBillingById({
-		id: billing.id as string,
-		updates: {
-			productId: input.productId,
-			status: input.status,
-			expiresAt: input.currentPeriodEnd
+	await db.transaction(async (trx) => {
+		await updateBillingById(
+			{
+				id: billing.id as string,
+				updates: {
+					productId: input.productId,
+					status: input.status,
+					expiresAt: input.currentPeriodEnd
+				}
+			},
+			trx
+		)
+
+		if (input.status === 'canceled' || input.status === 'unpaid') {
+			const defaultProduct = await getFreeTierProduct()
+			await updateUserById(
+				{
+					id: billing.userId,
+					updates: { productId: defaultProduct.id }
+				},
+				trx
+			)
+		} else if (input.productId && input.productId !== billing.productId) {
+			await updateUserById(
+				{
+					id: billing.userId,
+					updates: { productId: input.productId }
+				},
+				trx
+			)
 		}
 	})
-
-	if (input.status === 'canceled' || input.status === 'unpaid') {
-		const defaultProduct = await getFreeTierProduct()
-		await updateUserById({
-			id: billing.userId,
-			updates: { productId: defaultProduct.id }
-		})
-	} else if (input.productId && input.productId !== billing.productId) {
-		// If productId changed and subscription is still active/past_due, update user's productId
-		await updateUserById({
-			id: billing.userId,
-			updates: { productId: input.productId }
-		})
-	}
 }
 
 export const updateBillingOnSubscriptionDeleted = async (externalSubscriptionId: string) => {
@@ -91,17 +110,25 @@ export const updateBillingOnSubscriptionDeleted = async (externalSubscriptionId:
 	const billing = await getBillingByExternalSubscriptionId({ externalSubscriptionId })
 	if (!billing) return
 
-	await updateBillingById({
-		id: billing.id as string,
-		updates: {
-			status: 'canceled',
-			expiresAt: new Date()
-		}
-	})
+	await db.transaction(async (trx) => {
+		await updateBillingById(
+			{
+				id: billing.id as string,
+				updates: {
+					status: 'canceled',
+					expiresAt: new Date()
+				}
+			},
+			trx
+		)
 
-	const defaultProduct = await getFreeTierProduct()
-	await updateUserById({
-		id: billing.userId,
-		updates: { productId: defaultProduct.id }
+		const defaultProduct = await getFreeTierProduct()
+		await updateUserById(
+			{
+				id: billing.userId,
+				updates: { productId: defaultProduct.id }
+			},
+			trx
+		)
 	})
 }

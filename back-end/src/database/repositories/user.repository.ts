@@ -1,3 +1,4 @@
+import { type Knex } from 'knex'
 import knex from '../knex'
 import { ICreateUserInput, IUser, IUserDbRow, EUserDbRowKeys } from '../../types/user'
 import { keysToCamelCase, keysToSnakeCase } from '../../utils/case-conversion'
@@ -52,24 +53,28 @@ export const getUserByEmailVerificationToken = async ({ token }: { token: string
 	return keysToCamelCase<IUserDbRow, IUser>(row)
 }
 
-export const updateUserById = async ({
-	id: userId,
-	updates
-}: {
-	id: string
-	updates: Partial<
-		Pick<
-			IUser,
-			'email' | 'fullName' | 'phone' | 'age' | 'passwordHash' | 'refreshToken' | 'googleId' | 'emailVerified' | 'emailVerificationToken' | 'productId'
+export const updateUserById = async (
+	{
+		id: userId,
+		updates
+	}: {
+		id: string
+		updates: Partial<
+			Pick<
+				IUser,
+				'email' | 'fullName' | 'phone' | 'age' | 'passwordHash' | 'refreshToken' | 'googleId' | 'emailVerified' | 'emailVerificationToken' | 'productId'
+			>
 		>
-	>
-}): Promise<IUser> => {
+	},
+	trx?: Knex.Transaction
+): Promise<IUser> => {
+	const db = trx || knex
 	const updateData = keysToSnakeCase<typeof updates & { updatedAt: Date }, Partial<IUserDbRow>>({
 		...keysToSnakeCase(updates),
 		updatedAt: new Date()
 	})
 
-	const [row] = await knex(USERS_TABLE).where({ id: userId }).update(updateData).returning(Object.values(EUserDbRowKeys))
+	const [row] = await db(USERS_TABLE).where({ id: userId }).update(updateData).returning(Object.values(EUserDbRowKeys))
 
 	return keysToCamelCase<IUserDbRow, IUser>(row)
 }

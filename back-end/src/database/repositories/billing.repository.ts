@@ -1,3 +1,4 @@
+import { type Knex } from 'knex'
 import knex from '../knex'
 import { ICreateBilling, IBilling, IBillingDbRow } from '../../types/billing'
 import { IUser } from '../../types/user'
@@ -5,10 +6,11 @@ import { keysToCamelCase, keysToSnakeCase } from '../../utils/case-conversion'
 
 export const BILLINGS_TABLE = 'billings'
 
-export const createBilling = async (input: ICreateBilling): Promise<IBilling> => {
+export const createBilling = async (input: ICreateBilling, trx?: Knex.Transaction): Promise<IBilling> => {
+	const db = trx || knex
 	const insertData = keysToSnakeCase<ICreateBilling, Partial<IBillingDbRow>>(input)
 
-	const [row] = await knex(BILLINGS_TABLE).insert(insertData).returning('*')
+	const [row] = await db(BILLINGS_TABLE).insert(insertData).returning('*')
 
 	return keysToCamelCase<IBillingDbRow, IBilling>(row)
 }
@@ -40,16 +42,20 @@ export const getBillingByExternalSubscriptionId = async ({ externalSubscriptionI
 	return keysToCamelCase<IBillingDbRow, IBilling>(row)
 }
 
-export const updateBillingById = async (input: {
-	id: string
-	updates: {
-		productId?: string
-		externalSubscriptionId?: string
-		externalCustomerId?: string
-		status?: string
-		expiresAt?: Date
-	}
-}): Promise<IBilling> => {
+export const updateBillingById = async (
+	input: {
+		id: string
+		updates: {
+			productId?: string
+			externalSubscriptionId?: string
+			externalCustomerId?: string
+			status?: string
+			expiresAt?: Date
+		}
+	},
+	trx?: Knex.Transaction
+): Promise<IBilling> => {
+	const db = trx || knex
 	const updates: Partial<IBilling> = {
 		...input.updates,
 		updatedAt: new Date()
@@ -57,7 +63,7 @@ export const updateBillingById = async (input: {
 
 	const updateData = keysToSnakeCase<Partial<IBilling>, Partial<IBillingDbRow>>(updates)
 
-	const [row] = await knex(BILLINGS_TABLE).update(updateData).where({ id: input.id }).returning('*')
+	const [row] = await db(BILLINGS_TABLE).update(updateData).where({ id: input.id }).returning('*')
 
 	return keysToCamelCase<IBillingDbRow, IBilling>(row)
 }
