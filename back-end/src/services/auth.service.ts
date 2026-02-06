@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import { OAuth2Client } from 'google-auth-library'
+import { OAuth2Client, TokenPayload } from 'google-auth-library'
 
 import { decodeJwtToken, generateJwtToken, verifyJwtToken } from '../utils/jwt'
 import { CustomError } from '../utils/errors'
@@ -19,6 +19,24 @@ import { sendVerificationEmail, sendPasswordResetEmail } from 'src/utils/email'
 const { HASH_SALT } = process.env
 
 const client = new OAuth2Client(globalConfig.googleClientId)
+
+async function verifyGoogleCredential({ credential }: { credential: string }): Promise<TokenPayload> {
+	try {
+		const ticket = await client.verifyIdToken({
+			idToken: credential,
+			audience: globalConfig.googleClientId
+		})
+		const payload = ticket.getPayload()
+
+		if (!payload || !payload.sub || !payload.email || !payload.name) {
+			throw new Error()
+		}
+
+		return payload
+	} catch {
+		throw new CustomError('Invalid Google token', EStatusCodes.UNAUTHORIZED)
+	}
+}
 
 export interface IGoogleAuthInput {
 	credential: string
@@ -47,19 +65,12 @@ async function downgradeToFreeTier(userId: string): Promise<void> {
 export async function authenticateWithGoogle(input: IGoogleAuthInput): Promise<ILoginResponse> {
 	const { credential } = input
 
-	const ticket = await client.verifyIdToken({
-		idToken: credential,
-		audience: globalConfig.googleClientId
-	})
-	const payload = ticket.getPayload()
+	const payload = await verifyGoogleCredential({ credential })
 
-	if (!payload || !payload.sub || !payload.email) {
-		throw new CustomError('Invalid Google token payload', EStatusCodes.UNAUTHORIZED)
-	}
-
-	const googleId = payload.sub
-	const email = payload.email
-	const fullName = payload.name || 'Google User'
+	// after validation within `verifyGoogleCredential`, the email, googleId and name can't be undefined
+	const googleId = payload.sub!
+	const email = payload.email!
+	const fullName = payload.name!
 
 	let userByGoogleId = await getUserByGoogleId({ googleId })
 
