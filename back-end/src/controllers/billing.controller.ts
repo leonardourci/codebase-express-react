@@ -2,6 +2,7 @@ import { Response } from 'express'
 
 import { IBillingRequest } from '../middlewares/billing.middleware'
 import { getProductByExternalPriceId } from '../database/repositories/product.repository'
+import Logger from '../utils/logger'
 import {
 	registerUserBilling,
 	updateBillingOnPaymentFailed,
@@ -10,6 +11,8 @@ import {
 } from '../services/billing.service'
 import { EStatusCodes } from '../utils/status-codes'
 import { unixTimestampToDate } from '../utils/time'
+
+const logger = new Logger({ source: 'billing.controller' })
 
 export const processBillingWebhookHandler = async (req: IBillingRequest, res: Response): Promise<void> => {
 	if (!req.billingEvent) {
@@ -28,25 +31,26 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 				const subscriptionId = typeof subscription === 'string' ? subscription : subscription?.id
 
 				if (!subscriptionId) {
-					throw new Error('Subscription missing from invoice')
+					throw new Error('invoice.paid: Subscription missing from invoice')
 				}
 
 				const externalPriceId = lineItems[0].pricing?.price_details?.price
 
 				if (!externalPriceId) {
-					throw new Error('Price ID missing from invoice line item')
+					throw new Error('invoice.paid: Price ID missing from invoice line item')
 				}
 
 				const product = await getProductByExternalPriceId({ priceId: externalPriceId as string })
 
 				if (!product) {
-					throw new Error(`Product with external price ID "${externalPriceId}" not found`)
+					logger.error(`invoice.paid: Product with external price ID "${externalPriceId}" not found`)
+					break
 				}
 
 				const unixTimestampExpiresAt = lineItems[0].period.end
 
 				if (!unixTimestampExpiresAt) {
-					throw new Error('Period end missing from invoice line item')
+					throw new Error('invoice.paid: Period end missing from invoice line item')
 				}
 
 				await registerUserBilling({
@@ -67,14 +71,10 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 			const subscriptionId = typeof subscription === 'string' ? subscription : subscription?.id
 
 			if (!subscriptionId) {
-				throw new Error('Subscription missing from invoice line item')
+				throw new Error('invoice.payment_failed: Subscription missing from invoice line item')
 			}
 
-			/**
-			 * Stripe webhooks return subscription as string ID by default (not expanded)
-			 * but the type allows string | Subscription | null, so we handle both cases
-			 */
-			await updateBillingOnPaymentFailed(subscriptionId)
+			await updateBillingOnPaymentFailed({ externalSubscriptionId: subscriptionId })
 			break
 		}
 
@@ -84,7 +84,7 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 			const currentPeriodEnd = updatedSubscription.items.data[0]?.current_period_end
 
 			if (!currentPeriodEnd) {
-				throw new Error('Subscription item missing current_period_end')
+				throw new Error('subscription.updated: Subscription item missing current_period_end')
 			}
 
 			const expiresAt = updatedSubscription.cancel_at ? unixTimestampToDate(updatedSubscription.cancel_at) : unixTimestampToDate(currentPeriodEnd)
@@ -96,6 +96,8 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 				const product = await getProductByExternalPriceId({ priceId })
 				if (product) {
 					productId = product.id
+				} else {
+					logger.error(`subscription.updated: Product with external price ID "${priceId}" not found`)
 				}
 			}
 
@@ -112,7 +114,7 @@ export const processBillingWebhookHandler = async (req: IBillingRequest, res: Re
 		case 'customer.subscription.deleted': {
 			const deletedSubscription = billingEvent.data.object
 
-			await updateBillingOnSubscriptionDeleted(deletedSubscription.id)
+			await updateBillingOnSubscriptionDeleted({ externalSubscriptionId: deletedSubscription.id })
 			break
 		}
 	}

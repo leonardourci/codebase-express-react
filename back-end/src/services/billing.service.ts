@@ -55,7 +55,7 @@ export const registerUserBilling = async (input: IUpdateUserBillingInput) => {
 	})
 }
 
-export const updateBillingOnPaymentFailed = async (externalSubscriptionId: string) => {
+export const updateBillingOnPaymentFailed = async ({ externalSubscriptionId }: { externalSubscriptionId: string }) => {
 	if (!externalSubscriptionId) return
 	const billing = await getBillingByExternalSubscriptionId({ externalSubscriptionId })
 	if (!billing) return
@@ -81,7 +81,7 @@ export const updateBillingOnSubscriptionUpdated = async (input: {
 			{
 				id: billing.id as string,
 				updates: {
-					productId: input.productId,
+					...(input.productId && { productId: input.productId }),
 					status: input.status,
 					expiresAt: input.currentPeriodEnd
 				}
@@ -110,7 +110,7 @@ export const updateBillingOnSubscriptionUpdated = async (input: {
 	})
 }
 
-export const updateBillingOnSubscriptionDeleted = async (externalSubscriptionId: string) => {
+export const updateBillingOnSubscriptionDeleted = async ({ externalSubscriptionId }: { externalSubscriptionId: string }) => {
 	if (!externalSubscriptionId) return
 	const billing = await getBillingByExternalSubscriptionId({ externalSubscriptionId })
 	if (!billing) return
