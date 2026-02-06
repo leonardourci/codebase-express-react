@@ -1,6 +1,6 @@
 import knex from 'knex'
 import { DEFAULT_TEST_DB_CONNECTION } from '../../src/database/knexfile'
-import Logger from 'src/utils/logger'
+import Logger from '../../src/utils/logger'
 
 const logger = new Logger({ source: 'global-setup' })
 
