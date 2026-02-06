@@ -16,8 +16,8 @@ export const registerUserBilling = async (input: IUpdateUserBillingInput) => {
 	const billing = await getBillingByUserId({ userId: user.id })
 	const expiresAtDate = unixTimestampToDate(input.expiresAt)
 
-	if (!billing) {
-		await db.transaction(async (trx) => {
+	await db.transaction(async (trx) => {
+		if (!billing) {
 			await createBilling(
 				{
 					userId: user.id,
@@ -29,25 +29,30 @@ export const registerUserBilling = async (input: IUpdateUserBillingInput) => {
 				},
 				trx
 			)
-
-			await updateUserById(
+		} else {
+			await updateBillingById(
 				{
-					id: user.id,
-					updates: { productId: input.productId }
+					id: billing.id as string,
+					updates: {
+						productId: input.productId,
+						externalSubscriptionId: input.externalSubscriptionId,
+						externalCustomerId: input.externalCustomerId,
+						status: 'active',
+						expiresAt: expiresAtDate
+					}
 				},
 				trx
 			)
-		})
-	} else {
-		await updateBillingById({
-			id: billing.id as string,
-			updates: {
-				externalSubscriptionId: input.externalSubscriptionId,
-				externalCustomerId: input.externalCustomerId,
-				status: 'active'
-			}
-		})
-	}
+		}
+
+		await updateUserById(
+			{
+				id: user.id,
+				updates: { productId: input.productId }
+			},
+			trx
+		)
+	})
 }
 
 export const updateBillingOnPaymentFailed = async (externalSubscriptionId: string) => {
