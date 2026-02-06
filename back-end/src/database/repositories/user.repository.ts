@@ -70,7 +70,7 @@ export const updateUserById = async (
 ): Promise<IUser> => {
 	const db = trx || knex
 	const updateData = keysToSnakeCase<typeof updates & { updatedAt: Date }, Partial<IUserDbRow>>({
-		...keysToSnakeCase(updates),
+		...updates,
 		updatedAt: new Date()
 	})
 
