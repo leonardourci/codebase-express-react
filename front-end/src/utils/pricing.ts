@@ -1,5 +1,5 @@
 import { PRICING_PLANS } from '@shared/config/pricing.config'
-import type { IPricingPlan } from '@shared/types/pricing.types'
+import { EBillingPeriod, type IPricingPlan } from '@shared/types/pricing.types'
 
 /**
  * Get the pricing plan for a given external price ID.
@@ -35,7 +35,8 @@ export function getFreeTierPlan(): IPricingPlan {
  */
 export function formatPrice(plan: IPricingPlan): string {
   const price = (plan.priceInCents / 100).toFixed(2)
-  const period = plan.billingPeriod === 'monthly' ? 'month' : 'year'
+  const period =
+    plan.billingPeriod === EBillingPeriod.MONTHLY ? 'month' : 'year'
 
   return `$${price}/${period}`
 }

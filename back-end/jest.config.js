@@ -1,5 +1,3 @@
-const { environments } = require('eslint-plugin-prettier')
-
 module.exports = {
 	preset: 'ts-jest',
 	testEnvironment: 'node',

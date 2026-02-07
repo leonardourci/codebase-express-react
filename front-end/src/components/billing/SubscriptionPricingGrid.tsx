@@ -76,7 +76,7 @@ export function SubscriptionPricingGrid({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans.map((plan, index) => (
           <Card
-            key={plan.name}
+            key={plan.externalPriceId ?? plan.name}
             className={cn(
               'relative overflow-hidden transition-all duration-300 flex flex-col',
               index === 1
@@ -133,12 +133,12 @@ export function SubscriptionPricingGrid({
                   (() => {
                     const monthlyPlanPrice = getMonthlyPlanPrice(plan)
                     const yearlySavings = monthlyPlanPrice
-                      ? monthlyPlanPrice * 12 - plan.priceInCents
+                      ? Math.max(0, monthlyPlanPrice * 12 - plan.priceInCents)
                       : 0
 
                     return (
                       <>
-                        {monthlyPlanPrice && (
+                        {monthlyPlanPrice && yearlySavings > 0 && (
                           <p className="text-xs text-green-600 dark:text-green-400 font-medium">
                             Save ${formatPrice({ priceInCents: yearlySavings })}
                             /year
