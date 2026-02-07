@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { SubscriptionPricingGrid } from '@/components/billing/SubscriptionPricingGrid'
 import { Header } from '@/components/layout/Header'
 import { PRICING_PLANS } from '@shared/config/pricing.config'
@@ -6,61 +7,41 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAuthModal } from '@/contexts/AuthModalContext'
 import { BillingPeriodToggle } from '@/components/billing/BillingPeriodToggle'
 import { EBillingPeriod, type IPricingPlan } from '@shared/types/pricing.types'
-import { trpc } from '@/lib/trpc'
 
 export function PricingView() {
   const { isAuthenticated } = useAuth()
   const { openAuth } = useAuthModal()
-  const [isLoadingPortal, setIsLoadingPortal] = useState(false)
+  const navigate = useNavigate()
 
   const [selectedPeriod, setSelectedPeriod] = useState<EBillingPeriod>(
     EBillingPeriod.YEARLY
   )
 
-  const { data: billingData } = trpc.billing.getUserBilling.useQuery(
-    undefined,
-    { enabled: isAuthenticated }
-  )
-  const createPortalSession =
-    trpc.billing.createCustomerPortalSession.useMutation()
-
   const displayedPlans = PRICING_PLANS.filter(
     plan => plan.isFreeTier || plan.billingPeriod === selectedPeriod
   )
 
-  // Authenticated users: use externalPriceId from billing (null = free tier, matches free plan's null).
-  // Unauthenticated: billingData is undefined, so no plan is marked as current.
-  const currentPlanPriceId = billingData
-    ? (billingData.externalPriceId ?? null)
-    : undefined
-
   const getButtonText = (plan: IPricingPlan): string => {
     if (!isAuthenticated) return 'Get Started'
-    return 'Subscribe'
+    return 'Manage Plan'
   }
 
-  const handleButtonClick = async (priceId: string) => {
+  const handleFreeTierClick = () => {
     if (!isAuthenticated) {
-      // Open signup modal for unauthenticated users
       openAuth('signup')
       return
     }
 
-    // For authenticated users, open Stripe Portal to manage subscription
-    setIsLoadingPortal(true)
-    try {
-      const result = await createPortalSession.mutateAsync({
-        returnUrl: `${window.location.origin}/pricing`,
-      })
+    navigate('/billing')
+  }
 
-      if (result.url) {
-        window.location.href = result.url
-      }
-    } catch (error: any) {
-      const errorMessage = error?.message || 'Failed to access billing portal'
-      alert(errorMessage)
-      setIsLoadingPortal(false)
+  const handleButtonClick = async (_priceId: string) => {
+    if (!isAuthenticated) {
+      openAuth('signup')
+      return
     }
+
+    navigate('/billing')
   }
 
   return (
@@ -85,8 +66,7 @@ export function PricingView() {
             allPlans={PRICING_PLANS}
             buttonText={getButtonText}
             onSubscribe={handleButtonClick}
-            checkoutLoading={isLoadingPortal ? 'loading' : null}
-            currentPlanExternalPriceId={currentPlanPriceId}
+            onFreeTierClick={handleFreeTierClick}
           />
         </div>
       </main>

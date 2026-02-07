@@ -24,6 +24,7 @@ interface SubscriptionPricingGridProps {
   plans: IPricingPlan[]
   allPlans?: IPricingPlan[]
   onSubscribe?: (priceId: string) => void
+  onFreeTierClick?: () => void
   checkoutLoading?: string | null
   isEmailVerified?: boolean
   buttonText?: string | ((plan: IPricingPlan) => string)
@@ -34,6 +35,7 @@ export function SubscriptionPricingGrid({
   plans,
   allPlans,
   onSubscribe,
+  onFreeTierClick,
   checkoutLoading = null,
   isEmailVerified = true,
   buttonText = 'Subscribe',
@@ -172,8 +174,10 @@ export function SubscriptionPricingGrid({
                   <div className="w-full">
                     <Button
                       onClick={
-                        isInteractive && plan.externalPriceId
-                          ? () => onSubscribe(plan.externalPriceId!)
+                        isInteractive
+                          ? plan.externalPriceId
+                            ? () => onSubscribe(plan.externalPriceId!)
+                            : onFreeTierClick
                           : undefined
                       }
                       disabled={
